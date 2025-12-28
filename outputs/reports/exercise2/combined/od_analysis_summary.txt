@@ -1,0 +1,27 @@
+================================================================================
+ ORIGIN-DESTINATION ANALYSIS SUMMARY
+================================================================================
+
+Analysis Date: 2025-12-28 14:44
+
+DATA OVERVIEW:
+  Total valid O-D trips: 2,509,948
+  Peak trips: 752,924 (30.0%)
+  Off-Peak trips: 1,757,024 (70.0%)
+  Peak hours defined: [7, 8, 9, 17, 18, 19]
+
+ZONE COVERAGE:
+  Total zones in shapefile: 94
+  Zones with trip origins: 89
+  Zones with trip destinations: 88
+
+OUTPUT FILES GENERATED:
+  - OD_Matrix_Peak.csv
+  - OD_Matrix_OffPeak.csv
+  - OD_Matrix_AllDay.csv
+  - od_heatmap_peak.png
+  - od_heatmap_offpeak.png
+  - od_heatmap_allday.png
+  - flow_map_peak.png
+  - flow_map_offpeak.png
+  - flow_map_allday.png
