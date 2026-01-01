@@ -19,7 +19,7 @@
 
 ## Overview
 
-This project presents a comprehensive data-driven investigation of shared micro-mobility patterns in Turin, Italy. We analyze **549,513 e-scooter trips** across three major operators (Lime, Bird, Voi) to understand service availability, pricing structures, and the relationship between e-scooters and public transport.
+This project presents a comprehensive data-driven investigation of shared micro-mobility patterns in Turin, Italy. We analyze **2,548,650 e-scooter trips** across three major operators (Lime, Bird, Voi) to understand service availability, pricing structures, and the relationship between e-scooters and public transport.
 
 ### Research Objectives
 
@@ -41,24 +41,24 @@ This project presents a comprehensive data-driven investigation of shared micro-
 
 | Metric | Value | Interpretation |
 |--------|-------|----------------|
-| **Total Trips Analyzed** | 549,513 | One year of trip data (2023-2024) |
-| **Integration Index (200m)** | 95.3% | Near-universal proximity to PT stops |
-| **Feeder Rate** | 82.4% | Strong first/last-mile connector role |
-| **Peak Hour Concentration** | 38.5% | Clear commuting patterns (8-9 AM, 5-7 PM) |
-| **Market Size** | €8.31M/year | Combined operator revenue |
-| **Probability of Loss** | 0.52% | Low financial risk for operators |
+| **Total Trips Analyzed** | 2,548,650 | After data cleaning (87-99% retention) |
+| **Integration Index (200m)** | 99.7% | Near-universal proximity to PT stops |
+| **Feeder Rate** | 95.1% | Strong first/last-mile connector role |
+| **Peak Hours** | 8-9 AM, 17-19 PM | Clear commuting patterns |
+| **Market Size** | €8.30M/year | Combined operator revenue |
+| **Probability of Loss** | 0.28% | Very low financial risk (Monte Carlo) |
 
 ### Operator Comparison
 
-| Operator | Daily Trips | Revenue (€/year) | Profit Margin | Market Share |
+| Operator | Total Trips | Revenue (€/year) | Profit Margin | Market Share |
 |----------|-------------|------------------|---------------|--------------|
-| **LIME** | 4,865 | 4,245,099 | 55.7% | 51.1% |
-| **BIRD** | 5,288 | 3,217,369 | 61.5% | 38.7% |
-| **VOI** | 5,360 | 837,898 | 53.5% | 10.1% |
+| **LIME** | 1,421,374 | 4,245,099 | 55.7% | 55.8% |
+| **BIRD** | 852,751 | 3,217,369 | 61.5% | 33.5% |
+| **VOI** | 274,525 | 837,898 | 53.5% | 10.8% |
 
 ### Main Conclusion
 
-E-scooters function primarily as **first/last-mile connectors** rather than direct competitors to public transport. Over 82% of trips start or end within 200 meters of a transit stop.
+E-scooters function primarily as **first/last-mile connectors** rather than direct competitors to public transport. Over 95% of trips start or end within 200 meters of a transit stop.
 
 ---
 
@@ -105,8 +105,13 @@ Our methodology follows a systematic snapshot analysis framework:
 
 - **Kruskal-Wallis H-test**: Compare distributions across operators
 - **Chi-square Test**: Categorical variable independence
+- **Mann-Whitney U Test**: Pairwise non-parametric comparison
 - **Monte Carlo Simulation**: 10,000 iterations for risk analysis
-- **Bootstrap Confidence Intervals**: 95% CI for profit metrics
+- **Bootstrap Confidence Intervals**: 95% CI (n=1,000 resamples)
+- **Kaplan-Meier Survival Analysis**: Parking duration modeling
+- **Weibull Distribution Fitting**: Parametric survival model
+- **Log-rank Test**: Survival curve comparison
+- **Moran's I**: Spatial autocorrelation detection
 - **STL Decomposition**: Seasonal-trend analysis
 
 ---
@@ -185,9 +190,10 @@ Analyzes hourly, daily, and monthly usage patterns for each operator.
 Maps mobility corridors and zone-to-zone flows across Turin.
 
 **Methods**:
-- Spatial clustering of trip origins and destinations
-- Flow visualization with directed edges
-- Density estimation using hexagonal binning
+- Spatial joining to official Turin Zone Statistiche
+- Advanced OD metrics (Gini, Entropy, Flow Asymmetry)
+- Chi-square tests for temporal independence
+- Hierarchical clustering for zone grouping
 
 **Key Outputs**:
 - OD flow matrices (zone-to-zone)
@@ -200,9 +206,10 @@ Maps mobility corridors and zone-to-zone flows across Turin.
 Evaluates e-scooter proximity to public transport stops.
 
 **Methods**:
-- Buffer analysis (50m, 100m, 200m, 500m)
-- Tortuosity calculation (actual vs. straight-line distance)
-- Competition vs. complementarity classification
+- Multi-buffer sensitivity analysis (50m, 100m, 200m)
+- Moran's I for spatial autocorrelation
+- Chi-square tests for integration independence
+- Permutation tests (1,000 iterations)
 
 **Key Outputs**:
 - Integration index by buffer distance
@@ -215,9 +222,10 @@ Evaluates e-scooter proximity to public transport stops.
 Studies parking duration patterns and turnover rates.
 
 **Methods**:
-- Survival analysis (Kaplan-Meier curves)
-- Turnover rate calculation by zone
-- Abandoned vehicle detection
+- Kaplan-Meier survival curves with 95% CI
+- Weibull distribution fitting (MLE)
+- Log-rank test for group comparisons
+- Ghost vehicle detection (>120 hours)
 
 **Key Outputs**:
 - Parking duration histograms
