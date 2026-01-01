@@ -1,33 +1,64 @@
+<div align="center">
+
 # Turin Micromobility Analysis
 
-**A Snapshot Analysis of E-Scooter Sharing Services in Turin, Italy**
+**Comprehensive Spatial-Temporal Analysis of E-Scooter Sharing Services**
 
-[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
-[![GeoPandas](https://img.shields.io/badge/GeoPandas-0.14+-green.svg)](https://geopandas.org)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](#license)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![GeoPandas](https://img.shields.io/badge/GeoPandas-0.14+-139C5A?style=for-the-badge&logo=geopandas&logoColor=white)](https://geopandas.org)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Completed-brightgreen?style=for-the-badge)](#)
 
 *Politecnico di Torino | Transport Engineering | 2024-2025*
+
+[Overview](#overview) • [Key Findings](#key-findings) • [Methodology](#methodology) • [Installation](#installation) • [Usage](#usage) • [Results](#results)
+
+</div>
 
 ---
 
 ## Overview
 
-This project analyzes and compares the service level, availability, and cost of three major micro-mobility operators (Lime, Bird, Voi) in Turin, Italy. Using a snapshot methodology, we capture the state of shared e-scooter systems at specific moments to evaluate fleet density, market share, battery levels, and pricing structures.
+This project presents a comprehensive data-driven investigation of shared micro-mobility patterns in Turin, Italy. We analyze **549,513 e-scooter trips** across three major operators (Lime, Bird, Voi) to understand service availability, pricing structures, and the relationship between e-scooters and public transport.
 
-### Research Question
+### Research Objectives
 
-> Which operator offers the best service and value for money for a Home-to-University commute?
+1. **Service Level Analysis**: Compare fleet density, availability, and battery levels across operators
+2. **Temporal Patterns**: Identify peak usage hours, weekly cycles, and seasonal trends
+3. **Public Transport Integration**: Determine if e-scooters compete with or complement public transit
+4. **Economic Viability**: Evaluate operator profitability and cost structures
+5. **Optimal Mode Choice**: Recommend the best operator for specific commuting scenarios
 
-### Key Findings
+### Central Research Question
 
-| Metric | Value |
-|--------|-------|
-| Total Trips Analyzed | 549,513 |
-| Integration Index (200m) | 95.3% |
-| Feeder Rate | 82.4% |
-| Peak Hour Concentration | 38.5% |
+> **"Are e-scooters competitors or allies to public transport in Turin?"**
 
-**Conclusion**: E-scooters function primarily as first/last-mile connectors to public transport rather than direct competitors.
+---
+
+## Key Findings
+
+### Summary Statistics
+
+| Metric | Value | Interpretation |
+|--------|-------|----------------|
+| **Total Trips Analyzed** | 549,513 | One year of trip data (2023-2024) |
+| **Integration Index (200m)** | 95.3% | Near-universal proximity to PT stops |
+| **Feeder Rate** | 82.4% | Strong first/last-mile connector role |
+| **Peak Hour Concentration** | 38.5% | Clear commuting patterns (8-9 AM, 5-7 PM) |
+| **Market Size** | €8.31M/year | Combined operator revenue |
+| **Probability of Loss** | 0.52% | Low financial risk for operators |
+
+### Operator Comparison
+
+| Operator | Daily Trips | Revenue (€/year) | Profit Margin | Market Share |
+|----------|-------------|------------------|---------------|--------------|
+| **LIME** | 4,865 | 4,245,099 | 55.7% | 51.1% |
+| **BIRD** | 5,288 | 3,217,369 | 61.5% | 38.7% |
+| **VOI** | 5,360 | 837,898 | 53.5% | 10.1% |
+
+### Main Conclusion
+
+E-scooters function primarily as **first/last-mile connectors** rather than direct competitors to public transport. Over 82% of trips start or end within 200 meters of a transit stop.
 
 ---
 
@@ -35,111 +66,180 @@ This project analyzes and compares the service level, availability, and cost of 
 
 ### Study Area
 
-- **Location**: Turin city center (approximately 1 km² around Politecnico di Torino campus)
-- **Operators Analyzed**: Lime, Bird, Voi
+- **City**: Turin, Italy (Metropolitan Area)
+- **Operators**: Lime, Bird, Voi
+- **Data Period**: 12 months (2023-2024)
 - **Commute Route**: Codegone to Castello del Valentino (3.6 km)
 
 ### Snapshot Analysis Approach
 
-1. **Define Study Area**: Select a zone where all three operators are active
-2. **Data Collection**: Capture vehicle locations, battery levels, and pricing from mobile apps
-3. **Calculate KPIs**: Fleet density, market share, average battery level, pricing
-4. **Apply to Commute**: Calculate trip costs for each operator
+Our methodology follows a systematic snapshot analysis framework:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  1. DEFINE STUDY AREA                                           │
+│     └── Select zone where all operators are active (~1 km²)     │
+├─────────────────────────────────────────────────────────────────┤
+│  2. DATA COLLECTION                                             │
+│     └── Capture vehicle locations, battery, pricing from apps   │
+├─────────────────────────────────────────────────────────────────┤
+│  3. CALCULATE KPIs                                              │
+│     └── Fleet density, market share, battery levels, costs      │
+├─────────────────────────────────────────────────────────────────┤
+│  4. APPLY TO COMMUTE                                            │
+│     └── Calculate trip costs and generalized cost per operator  │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ### Key Performance Indicators
 
 | KPI | Formula | Purpose |
 |-----|---------|---------|
-| Fleet Density | Vehicles / Area (km²) | Measures ease of finding a scooter |
-| Market Share | Operator Vehicles / Total Vehicles | Shows operator dominance |
-| Average Battery | Mean of all battery readings | Indicates fleet quality |
-| Trip Cost | Unlock Fee + (Minutes × Rate) | Determines value for money |
+| **Fleet Density** | `Vehicles / Area (km²)` | Measures ease of finding a scooter |
+| **Market Share** | `Operator Vehicles / Total Vehicles` | Shows operator dominance |
+| **Average Battery** | `Mean(Battery Readings)` | Indicates fleet quality |
+| **Trip Cost** | `Unlock Fee + (Duration × Rate)` | Determines value for money |
+| **Integration Index** | `Trips near PT / Total Trips` | PT complementarity |
+
+### Statistical Methods
+
+- **Kruskal-Wallis H-test**: Compare distributions across operators
+- **Chi-square Test**: Categorical variable independence
+- **Monte Carlo Simulation**: 10,000 iterations for risk analysis
+- **Bootstrap Confidence Intervals**: 95% CI for profit metrics
+- **STL Decomposition**: Seasonal-trend analysis
 
 ---
 
 ## Project Structure
 
 ```text
-Turin Micromobility Analysis/
-├── run_pipeline.py          # Master pipeline controller
-├── requirements.txt         # Python dependencies
+Turin-MicromobilityAnalysis/
+│
+├── run_pipeline.py              # Master pipeline controller
+├── requirements.txt             # Python dependencies
+├── README.md                    # This file
+├── ARCHITECTURE.md              # Technical documentation
+│
 ├── src/
-│   ├── analysis/            # Core analysis modules
-│   │   ├── 01_temporal_analysis.py
-│   │   ├── 02_od_matrix_analysis.py
-│   │   ├── 03_integration_analysis.py
-│   │   ├── 04_parking_analysis.py
-│   │   └── 05_economic_analysis.py
+│   ├── analysis/                # Core analysis modules
+│   │   ├── 01_temporal_analysis.py      # Hourly/daily/monthly patterns
+│   │   ├── 02_od_matrix_analysis.py     # Origin-destination flows
+│   │   ├── 03_integration_analysis.py   # E-scooter & PT comparison
+│   │   ├── 04_parking_analysis.py       # Parking duration & turnover
+│   │   └── 05_economic_analysis.py      # Revenue & profitability
+│   │
 │   ├── data/
-│   │   └── 00_data_cleaning.py
-│   ├── utils/
-│   └── visualization/       # Visualization scripts
+│   │   └── 00_data_cleaning.py          # Data preprocessing
+│   │
+│   ├── utils/                   # Helper functions
+│   │
+│   └── visualization/           # Plotting scripts
 │       ├── 01_temporal_dashboard.py
 │       ├── 02_od_spatial_flows.py
 │       ├── 03_integration_maps.py
 │       ├── 04_parking_maps.py
 │       └── 05_economic_sensitivity.py
+│
 ├── outputs/
-│   ├── figures/             # Generated visualizations
-│   │   ├── exercise1/       # Temporal patterns
-│   │   ├── exercise2/       # OD matrix flows
-│   │   ├── exercise3/       # Integration analysis
-│   │   ├── exercise4/       # Parking analysis
-│   │   └── exercise5/       # Economic analysis
-│   ├── reports/             # Analysis reports
-│   └── tables/              # Data tables
-└── docs/                    # Documentation
+│   ├── figures/                 # Generated visualizations (PNG)
+│   │   ├── exercise1/           # Temporal pattern charts
+│   │   ├── exercise2/           # OD flow maps
+│   │   ├── exercise3/           # Integration analysis maps
+│   │   ├── exercise4/           # Parking analysis charts
+│   │   └── exercise5/           # Economic analysis charts
+│   │
+│   ├── reports/                 # CSV and pickle checkpoints
+│   │
+│   └── tables/                  # Statistical summary tables
+│       ├── exercise1/           # Descriptive statistics
+│       ├── exercise2/           # OD matrices
+│       ├── exercise3/           # Integration metrics
+│       ├── exercise4/           # Parking statistics
+│       └── exercise5/           # Financial summaries
+│
+└── docs/                        # Additional documentation
 ```
 
 ---
 
-## Analysis Modules
+## Analysis Pipeline
 
 ### Exercise 1: Temporal Pattern Analysis
 
 Analyzes hourly, daily, and monthly usage patterns for each operator.
 
+**Methods**:
+- Seasonal-Trend decomposition using Loess (STL)
+- Peak detection using scipy signal processing
+- Statistical comparison with Kruskal-Wallis test
+
 **Key Outputs**:
-- Hourly trip distribution
-- Weekly usage patterns
-- Monthly trends
-- Fleet utilization rates
+- Hourly trip distribution with confidence intervals
+- Weekly usage heatmaps
+- Monthly trend analysis
+- Fleet utilization rates by operator
 
 ### Exercise 2: Origin-Destination Matrix
 
 Maps mobility corridors and zone-to-zone flows across Turin.
 
+**Methods**:
+- Spatial clustering of trip origins and destinations
+- Flow visualization with directed edges
+- Density estimation using hexagonal binning
+
 **Key Outputs**:
-- OD flow matrices
-- Spatial flow maps
-- Trip density analysis
+- OD flow matrices (zone-to-zone)
+- Spatial flow maps with arrow thickness
+- Trip density hexbin maps
+- Top corridor identification
 
 ### Exercise 3: Public Transport Integration
 
 Evaluates e-scooter proximity to public transport stops.
 
+**Methods**:
+- Buffer analysis (50m, 100m, 200m, 500m)
+- Tortuosity calculation (actual vs. straight-line distance)
+- Competition vs. complementarity classification
+
 **Key Outputs**:
-- Integration index maps
-- Buffer sensitivity analysis
-- Competition vs. complementarity assessment
+- Integration index by buffer distance
+- Competition map (PT-parallel routes)
+- Feeder service identification
+- Temporal comparison with PT schedules
 
 ### Exercise 4: Parking Analysis
 
 Studies parking duration patterns and turnover rates.
 
+**Methods**:
+- Survival analysis (Kaplan-Meier curves)
+- Turnover rate calculation by zone
+- Abandoned vehicle detection
+
 **Key Outputs**:
-- Survival curves
-- Parking intensity maps
-- Turnover analysis
+- Parking duration histograms
+- Survival curves by operator
+- Parking intensity heatmaps
+- Turnover vs. demand scatter plots
 
 ### Exercise 5: Economic Analysis
 
 Calculates revenue, fleet economics, and profitability.
 
+**Methods**:
+- Monte Carlo simulation (10,000 iterations)
+- Break-even analysis with sensitivity testing
+- Pareto analysis (80/20 rule for zones)
+- Scenario modeling (base/optimistic/pessimistic)
+
 **Key Outputs**:
+- Operator P&L waterfall charts
 - Revenue yield maps
-- Break-even analysis
-- Operator P&L comparison
+- Break-even scatter plots
+- Sensitivity tornado diagrams
 
 ---
 
@@ -149,21 +249,37 @@ Calculates revenue, fleet economics, and profitability.
 
 - Python 3.10 or higher
 - pip package manager
+- Git
 
-### Setup
+### Quick Start
 
 ```bash
 # Clone the repository
 git clone https://github.com/aliivaezii/Turin-MicromobilityAnalysis.git
 cd Turin-MicromobilityAnalysis
 
-# Create virtual environment
+# Create and activate virtual environment
 python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+source .venv/bin/activate  # macOS/Linux
+# .venv\Scripts\activate   # Windows
 
 # Install dependencies
 pip install -r requirements.txt
 ```
+
+### Dependencies
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| pandas | ≥2.0.0 | Data manipulation |
+| numpy | ≥1.24.0 | Numerical computing |
+| scipy | ≥1.10.0 | Statistical analysis |
+| geopandas | ≥0.14.0 | Geospatial analysis |
+| shapely | ≥2.0.0 | Geometric operations |
+| matplotlib | ≥3.7.0 | Visualization |
+| seaborn | ≥0.12.0 | Statistical graphics |
+| contextily | ≥1.3.0 | Basemap tiles |
+| tqdm | ≥4.65.0 | Progress bars |
 
 ---
 
@@ -175,88 +291,118 @@ pip install -r requirements.txt
 python run_pipeline.py
 ```
 
-### Run Specific Stages
+### Run Specific Exercises
 
 ```bash
-# Run stages 1, 2, and 3
+# Run only exercises 1, 2, and 3
 python run_pipeline.py --stages 1 2 3
 
-# Run from stage 3 onwards
+# Run from exercise 3 onwards
 python run_pipeline.py --from-stage 3
 
-# Run only visualizations
+# Run only visualizations (skip analysis)
 python run_pipeline.py --viz-only
 
-# Skip visualizations
+# Run analysis without visualizations
 python run_pipeline.py --no-viz
 ```
 
 ### Pipeline Stages
 
-| Stage | Module | Description |
-|-------|--------|-------------|
-| 0 | Data Cleaning | Clean and prepare raw data |
-| 1 | Temporal Analysis | Hourly/daily/monthly patterns |
-| 2 | OD Matrix | Origin-destination flows |
-| 3 | Integration | E-scooter and PT comparison |
-| 4 | Parking | Duration and turnover |
-| 5 | Economic | Revenue and profitability |
+| Stage | Module | Description | Runtime |
+|-------|--------|-------------|---------|
+| 0 | Data Cleaning | Clean and harmonize raw data | ~2 min |
+| 1 | Temporal Analysis | Hourly/daily/monthly patterns | ~5 min |
+| 2 | OD Matrix | Origin-destination flow analysis | ~8 min |
+| 3 | Integration | E-scooter and PT comparison | ~10 min |
+| 4 | Parking | Duration and turnover analysis | ~5 min |
+| 5 | Economic | Revenue and profitability | ~15 min |
 
 ---
 
-## Dependencies
+## Results
 
-```text
-pandas>=2.0.0
-numpy>=1.24.0
-scipy>=1.10.0
-geopandas>=0.14.0
-shapely>=2.0.0
-pyproj>=3.3.0
-contextily>=1.3.0
-matplotlib>=3.7.0
-seaborn>=0.12.0
-tqdm>=4.65.0
-openpyxl>=3.1.0
-```
+### Sample Visualizations
 
----
+#### Temporal Patterns (Exercise 1)
 
-## Sample Outputs
+<p align="center">
+  <img src="outputs/figures/exercise1/lime_hourly_pattern.png" width="45%" alt="Hourly Pattern">
+  <img src="outputs/figures/exercise1/lime_weekly_pattern.png" width="45%" alt="Weekly Pattern">
+</p>
 
-### Temporal Analysis
+#### Public Transport Integration (Exercise 3)
 
-![Hourly Pattern](outputs/figures/exercise1/lime_hourly_pattern.png)
+<p align="center">
+  <img src="outputs/figures/exercise3/integration_map.png" width="70%" alt="Integration Map">
+</p>
 
-### Integration Map
+#### Economic Analysis (Exercise 5)
 
-![Integration Map](outputs/figures/exercise3/integration_map.png)
-
-### Economic Analysis
-
-![Revenue Map](outputs/figures/exercise5/map_revenue_yield.png)
+<p align="center">
+  <img src="outputs/figures/exercise5/operator_pnl_waterfall.png" width="70%" alt="P&L Waterfall">
+</p>
 
 ---
 
-## Cost Comparison Example
+## Cost Comparison for Commuters
 
-For a Home-to-Polito commute (18 minutes by e-scooter):
+For a typical Home-to-University commute (Codegone to Valentino, 18 minutes):
 
-| Operator | Unlock Fee | Rate (per min) | Trip Cost |
-|----------|------------|----------------|-----------|
-| Lime | 1.00 EUR | 0.25 EUR | 5.50 EUR |
-| Bird | 1.00 EUR | 0.19 EUR | 4.42 EUR |
-| Voi | 1.00 EUR | 0.19 EUR | 4.42 EUR |
+| Operator | Unlock Fee | Rate/min | Trip Cost | Monthly (44 trips) |
+|----------|------------|----------|-----------|-------------------|
+| **Lime** | €1.00 | €0.25 | €5.50 | €242.00 |
+| **Bird** | €1.00 | €0.19 | €4.42 | €194.48 |
+| **Voi** | €1.00 | €0.19 | €4.42 | €194.48 |
 
-**Recommendation**: For regular commuters, operator subscriptions significantly reduce costs.
+### Subscription Recommendations
+
+| Scenario | Best Choice | Reason |
+|----------|-------------|--------|
+| **Occasional use** (< 10 trips/month) | Any operator | Similar pricing |
+| **Regular commute** (20+ trips/month) | Lime Pro subscription | Fixed monthly fee |
+| **Short trips** (< 5 min) | Bird or Voi | Lower per-minute rate |
+| **High availability priority** | Lime | Largest fleet |
+
+---
+
+## Technical Notes
+
+### Data Quality
+
+- Raw data cleaned using multi-stage pipeline
+- Geographic filtering to Turin metropolitan boundary
+- Temporal filtering for valid trip durations (1-60 minutes)
+- Battery level validation (0-100%)
+
+### Statistical Rigor
+
+- All confidence intervals at 95% level
+- Effect sizes reported (Cohen's d, eta-squared)
+- Non-parametric tests used for non-normal distributions
+- Bootstrap resampling for robust estimates
+
+---
+
+## Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/new-analysis`)
+3. Commit changes (`git commit -m 'Add new analysis module'`)
+4. Push to branch (`git push origin feature/new-analysis`)
+5. Open a Pull Request
 
 ---
 
 ## Author
 
 **Ali Vaezi**  
-Transport Engineering  
-Politecnico di Torino
+MSc Transport Engineering  
+Politecnico di Torino, Italy
+
+[![GitHub](https://img.shields.io/badge/GitHub-aliivaezii-181717?style=flat&logo=github)](https://github.com/aliivaezii)
 
 ---
 
@@ -268,6 +414,8 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 
 ## Acknowledgments
 
-- Politecnico di Torino, Department of Transport Engineering
-- Turin Open Data Portal for public transport information
-- Lime, Bird, and Voi for mobile app accessibility
+- **Politecnico di Torino**, Department of Transport Engineering
+- **Turin Open Data Portal** for public transport stop locations
+- **Lime, Bird, and Voi** for providing accessible mobile applications
+- Course instructors for methodology guidance
+
