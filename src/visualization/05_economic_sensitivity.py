@@ -44,7 +44,7 @@ DATA_DIR = BASE_DIR / "outputs" / "reports" / "exercise5"
 FIGURE_DIR = BASE_DIR / "outputs" / "figures" / "exercise5" / "statistical"
 TABLE_DIR = BASE_DIR / "outputs" / "tables" / "exercise5"
 
-# Publication settings
+# Professional settings
 DPI = 300
 FIGSIZE = (10, 7)
 FIGSIZE_WIDE = (12, 6)
@@ -58,7 +58,7 @@ OPERATOR_COLORS = {
 
 
 def setup_matplotlib():
-    """Configure matplotlib for PUBLICATION-QUALITY."""
+    """Configure matplotlib for HIGH-QUALITY."""
     plt.rcParams.update({
         'font.family': 'serif',
         'font.size': 11,
@@ -465,19 +465,24 @@ def create_fig09_pareto(pareto_df):
     
     # Find 80% point
     zones_80 = pareto_df[pareto_df['cumulative_profit_pct'] >= 80].iloc[0]['cumulative_zone_pct']
-    ax.annotate(f'{zones_80:.0f}% zones\ngenerate 80% profit',
-                xy=(zones_80, 80), xytext=(zones_80 + 15, 65),
-                arrowprops=dict(arrowstyle='->', color='red'),
-                fontsize=10, color='red')
     
-    # Gini coefficient
+    # Position the annotation to avoid overlapping with the curve
+    # Use lower-left quadrant for the annotation
+    ax.annotate(f'{zones_80:.0f}% zones\ngenerate 80% profit',
+                xy=(zones_80, 80), xycoords='data',
+                xytext=(60, 40),  # Fixed position in lower-right area
+                arrowprops=dict(arrowstyle='->', color='red', lw=1.5),
+                fontsize=10, color='red', fontweight='bold',
+                bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='red', alpha=0.9))
+    
+    # Gini coefficient - positioned in bottom right corner
     area = np.trapz(pareto_df['cumulative_profit_pct'],
                     pareto_df['cumulative_zone_pct']) / 100
     gini = 1 - 2 * area / 100
     
     ax.text(0.97, 0.03, f'Gini = {gini:.3f}', transform=ax.transAxes,
             fontsize=11, ha='right', va='bottom',
-            bbox=dict(boxstyle='round', facecolor='white', alpha=0.9))
+            bbox=dict(boxstyle='round', facecolor='white', edgecolor='gray', alpha=0.9))
     
     ax.set_xlabel('Cumulative % of Zones (ranked by profit)')
     ax.set_ylabel('Cumulative % of Total Profit')
