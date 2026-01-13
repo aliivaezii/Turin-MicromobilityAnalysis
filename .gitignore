@@ -1,0 +1,263 @@
+# ==============================================================================
+# GITIGNORE - Turin E-Scooter Shared Mobility Analysis
+# ==============================================================================
+# Professional .gitignore for Data Science projects
+# 
+# NOTE: Data files are hosted on Kaggle due to size (7+ GB)
+# Download from: https://www.kaggle.com/datasets/aliivaezii/turin-escooter-trips
+# ==============================================================================
+
+# ==============================================================================
+# DATA - HOSTED ON KAGGLE (NOT IN THIS REPO)
+# ==============================================================================
+# Data files are too large for GitHub (7+ GB)
+# Download from Kaggle and place in data/ folder
+data/
+
+# Kaggle dataset folder (for upload preparation)
+kaggle_dataset/
+
+# ==============================================================================
+# RESULTS & OUTPUTS - EXCLUDED
+# ==============================================================================
+
+# Checkpoint files (large binary files)
+results/checkpoints/
+outputs/reports/checkpoint_*.pkl
+outputs/reports/checkpoint_*.csv
+
+# Generated figures (can be regenerated from source code)
+# results/figures/
+# outputs/figures/
+
+# Large temporary result files (NOT data files)
+results/*.pkl
+results/*.pickle
+
+# ==============================================================================
+# PYTHON CACHE & COMPILED FILES
+# ==============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# ==============================================================================
+# VIRTUAL ENVIRONMENTS
+# ==============================================================================
+
+# Virtual environment directories
+.venv/
+venv/
+ENV/
+env/
+.env/
+
+# Conda
+.conda/
+*.conda
+
+# Poetry
+.poetry/
+
+# Pipenv
+Pipfile.lock
+
+# ==============================================================================
+# IDE & EDITOR FILES
+# ==============================================================================
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm / JetBrains
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# ==============================================================================
+# OS GENERATED FILES
+# ==============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ==============================================================================
+# TESTING & COVERAGE
+# ==============================================================================
+
+# pytest
+.pytest_cache/
+.cache/
+*.pytest_cache
+
+# Coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ==============================================================================
+# DOCUMENTATION
+# ==============================================================================
+
+# Sphinx
+docs/_build/
+docs/api/
+
+# ==============================================================================
+# LOGS & TEMPORARY FILES
+# ==============================================================================
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ==============================================================================
+# SECRETS & CONFIGURATION
+# ==============================================================================
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# API keys and secrets
+secrets.yaml
+secrets.json
+*.pem
+*.key
+
+# ==============================================================================
+# PROJECT SPECIFIC
+# ==============================================================================
+
+# Archive and backup folders (old/backup files)
+archive/
+backup/
+
+# Documentation folders (not for GitHub)
+docs/
+final_report/
+report/
+outputs/
+latex_tables/
+
+# Backup files
+*_backup.*
+*_old.*
+*_test.*
+*.bak
+*.orig
+
+# Temp outputs during development
+temp/
+tmp/
+scratch/
+
+# ==============================================================================
+# EXCEPTIONS - FILES TO KEEP (EXPLICITLY INCLUDED)
+# ==============================================================================
+
+# Keep requirements and setup files
+!requirements.txt
+!setup.py
+!setup.cfg
+!pyproject.toml
+
+# Keep README and documentation
+!README.md
+!README.rst
+!ARCHITECTURE.md
+!CHANGELOG.md
+!LICENSE
+
+# Keep configuration files
+!.gitignore
+!.gitattributes
+!.editorconfig
+
+# Keep example/sample notebooks
+!notebooks/examples/*.ipynb
