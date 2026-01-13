@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 """
 ================================================================================
-EXERCISE 3: PUBLIC TRANSPORT INTEGRATION ANALYSIS - Statistical Analysis & Visualization
+EXERCISE 3: PUBLIC TRANSPORT INTEGRATION ANALYSIS - Statistical Visualization
 ================================================================================
-This module generates high-impact figures and tables following
-rigorous academic standards for reproducible research.
-
 Produces buffer sensitivity maps, integration metrics, and
 PT accessibility visualizations.
 
@@ -28,7 +25,7 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
-# Publication Style Configuration
+# Professional Style Configuration
 plt.rcParams.update({
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
