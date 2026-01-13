@@ -11,7 +11,7 @@
 
 *Politecnico di Torino | Transport Engineering | 2024-2025*
 
-[Overview](#overview) • [Key Findings](#key-findings) • [Methodology](#methodology) • [Installation](#installation) • [Usage](#usage) • [Results](#results)
+[Overview](#overview) • [Key Findings](#key-findings) • [Methodology](#methodology) • [Installation](#installation) • [Usage](#usage)
 
 </div>
 
@@ -126,6 +126,10 @@ Turin-MicromobilityAnalysis/
 ├── README.md                    # This file
 ├── ARCHITECTURE.md              # Technical documentation
 │
+├── data/                        # Download from Kaggle (see below)
+│   ├── raw/                     # Raw e-scooter trip data
+│   └── processed/               # Cleaned and processed data
+│
 ├── src/
 │   ├── analysis/                # Core analysis modules
 │   │   ├── 01_temporal_analysis.py      # Hourly/daily/monthly patterns
@@ -140,30 +144,90 @@ Turin-MicromobilityAnalysis/
 │   ├── utils/                   # Helper functions
 │   │
 │   └── visualization/           # Plotting scripts
-│       ├── 01_temporal_dashboard.py
-│       ├── 02_od_spatial_flows.py
-│       ├── 03_integration_maps.py
-│       ├── 04_parking_maps.py
-│       └── 05_economic_sensitivity.py
+│       ├── 00_data_cleaning.py          # Data quality visualizations
+│       ├── 01_temporal_dashboard.py     # Temporal pattern charts
+│       ├── 02_od_spatial_flows.py       # Spatial flow maps
+│       ├── 03_integration_maps.py       # PT integration maps
+│       ├── 04_parking_maps.py           # Parking analysis maps
+│       └── 05_economic_maps.py          # Economic analysis charts
 │
-├── outputs/
-│   ├── figures/                 # Generated visualizations (PNG)
-│   │   ├── exercise1/           # Temporal pattern charts
-│   │   ├── exercise2/           # OD flow maps
-│   │   ├── exercise3/           # Integration analysis maps
-│   │   ├── exercise4/           # Parking analysis charts
-│   │   └── exercise5/           # Economic analysis charts
-│   │
-│   ├── reports/                 # CSV and pickle checkpoints
-│   │
-│   └── tables/                  # Statistical summary tables
-│       ├── exercise1/           # Descriptive statistics
-│       ├── exercise2/           # OD matrices
-│       ├── exercise3/           # Integration metrics
-│       ├── exercise4/           # Parking statistics
-│       └── exercise5/           # Financial summaries
-│
-└── docs/                        # Additional documentation
+└── outputs/                     # Generated outputs (created on run)
+    ├── figures/                 # Visualizations (PNG)
+    └── reports/                 # Analysis checkpoints (CSV/PKL)
+```
+
+---
+
+## Data Download
+
+The complete dataset (raw + processed) is hosted on Kaggle (~6.8 GB).
+
+### Option 1: Kaggle CLI (Recommended)
+
+```bash
+# Install Kaggle CLI
+pip install kaggle
+
+# Download dataset (requires Kaggle API key)
+kaggle datasets download -d aliivaezii/turin-escooter-trips -p data/ --unzip
+```
+
+### Option 2: Manual Download
+
+1. Visit: [https://www.kaggle.com/datasets/aliivaezii/turin-escooter-trips](https://www.kaggle.com/datasets/aliivaezii/turin-escooter-trips)
+2. Click "Download" 
+3. Extract contents to `data/` folder
+
+### Dataset Contents
+
+**Total Size**: ~6.8 GB
+
+#### Processed Data (4.4 GB)
+
+| File | Size | Trips | Description |
+|------|------|-------|-------------|
+| `processed/lime_cleaned.csv` | 2.0 GB | ~1.4M | Lime e-scooter trips (2024-2025) |
+| `processed/bird_cleaned.csv` | 106 MB | ~850K | Bird e-scooter trips (2024-2025) |
+| `processed/voi_cleaned.csv` | 53 MB | ~275K | Voi e-scooter trips (2024-2025) |
+| `processed/df_all.pkl` | 2.2 GB | ~2.5M | Combined DataFrame (pickle) |
+
+#### Raw Data (2.4 GB)
+
+| Folder | Size | Description |
+|--------|------|-------------|
+| `raw/lime/` | 2.2 GB | Original Lime CSV with route paths + 16 monthly files |
+| `raw/bird/` | 86 MB | Original Bird CSV files (2024 + 2025) |
+| `raw/voi/` | 28 MB | 22 monthly Excel files (Jan 2024 - Oct 2025) |
+| `raw/gtfs/` | 70 MB | Turin GTFS public transport data |
+| `raw/zone_statistiche_geo/` | 344 KB | Turin statistical zones shapefile |
+
+### Data Directory Structure
+
+After downloading, your `data/` folder should look like:
+
+```
+data/
+├── processed/
+│   ├── lime_cleaned.csv
+│   ├── bird_cleaned.csv
+│   ├── voi_cleaned.csv
+│   └── df_all.pkl
+└── raw/
+    ├── lime/
+    │   ├── Torino_Corse24-25.csv
+    │   └── monthly/
+    ├── bird/
+    │   ├── Bird Torino - 2024 - Sheet1.csv
+    │   └── Bird Torino - 2025 (fino il 18_11_2025) - Sheet1.csv
+    ├── voi/
+    │   └── DATINOLEGGI_YYYYMM.xlsx (22 files)
+    ├── gtfs/
+    │   ├── stops.txt
+    │   ├── routes.txt
+    │   └── ...
+    └── zone_statistiche_geo/
+        ├── zone_statistiche_geo.shp
+        └── ...
 ```
 
 ---
@@ -328,6 +392,27 @@ python run_pipeline.py --no-viz
 
 ---
 
+## Cost Comparison for Commuters
+
+For a typical Home-to-University commute (Codegone to Valentino, 18 minutes):
+
+| Operator | Unlock Fee | Rate/min | Trip Cost | Monthly (44 trips) |
+|----------|------------|----------|-----------|-------------------|
+| **Lime** | €1.00 | €0.25 | €5.50 | €242.00 |
+| **Bird** | €1.00 | €0.19 | €4.42 | €194.48 |
+| **Voi** | €1.00 | €0.19 | €4.42 | €194.48 |
+
+### Subscription Recommendations
+
+| Scenario | Best Choice | Reason |
+|----------|-------------|--------|
+| **Occasional use** (< 10 trips/month) | Any operator | Similar pricing |
+| **Regular commute** (20+ trips/month) | Lime Pro subscription | Fixed monthly fee |
+| **Short trips** (< 5 min) | Bird or Voi | Lower per-minute rate |
+| **High availability priority** | Lime | Largest fleet |
+
+---
+
 ## Technical Notes
 
 ### Data Quality
@@ -355,6 +440,25 @@ Contributions are welcome! Please follow these steps:
 3. Commit changes (`git commit -m 'Add new analysis module'`)
 4. Push to branch (`git push origin feature/new-analysis`)
 5. Open a Pull Request
+
+---
+
+## Citation
+
+If you use this dataset or code, please cite:
+
+```bibtex
+@misc{ali_vaezi_2026,
+  title = {Turin Escooter Trips 2024},
+  url = {https://www.kaggle.com/dsv/14486163},
+  DOI = {10.34740/KAGGLE/DSV/14486163},
+  publisher = {Kaggle},
+  author = {Ali Vaezi},
+  year = {2026}
+}
+```
+
+**DOI**: [10.34740/KAGGLE/DSV/14486163](https://doi.org/10.34740/KAGGLE/DSV/14486163)
 
 ---
 
