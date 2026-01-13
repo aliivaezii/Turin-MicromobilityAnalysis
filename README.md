@@ -464,8 +464,7 @@ If you use this dataset or code, please cite:
 
 ## Author
 
-**Ali Vaezi**  
-MSc Transport Engineering  
+**Ali Vaezi**   
 Politecnico di Torino, Italy
 
 [![GitHub](https://img.shields.io/badge/GitHub-aliivaezii-181717?style=flat&logo=github)](https://github.com/aliivaezii)
