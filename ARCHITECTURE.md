@@ -534,7 +534,6 @@ scikit-learn>=1.3.0    # Machine learning utilities
 ## Author
 
 **Ali Vaezi**  
-MSc Transport Engineering  
 Politecnico di Torino, Italy
 
 ---
