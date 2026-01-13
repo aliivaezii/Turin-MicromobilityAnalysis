@@ -475,12 +475,4 @@ Politecnico di Torino, Italy
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
----
-
-## Acknowledgments
-
-- **Politecnico di Torino**, Department of Transport Engineering
-- **Turin Open Data Portal** for public transport stop locations
-- **Lime, Bird, and Voi** for providing accessible mobile applications
-- Course instructors for methodology guidance
 
