@@ -6,7 +6,7 @@ EXERCISE 4: PARKING DURATION ANALYSIS - Geospatial Mapping & Visualization
 
 Geospatial visualization and cartographic analysis module.
 
-This module generates publication-quality maps with professional cartographic
+This module generates high-quality maps with professional cartographic
 elements including scale bars, north arrows, and statistical overlays.
 
 Generates survival curves, duration distributions, and
@@ -55,14 +55,14 @@ CRS_WGS84 = "EPSG:4326"
 CRS_UTM32N = "EPSG:32632"
 CRS_WEB_MERCATOR = "EPSG:3857"
 
-# Publication-quality styling
+# High-quality styling
 FIGSIZE_MAP = (14, 11)
 FIGSIZE_CHART = (12, 9)
 FIGSIZE_WIDE = (16, 9)
 DPI = 300
 FONT_FAMILY = 'DejaVu Sans'
 
-# Publication Color palettes
+# Professional Color palettes
 OPERATOR_COLORS = {
     'BIRD': '#D32F2F',   # Material Red 700
     'LIME': '#388E3C',   # Material Green 700
@@ -88,7 +88,7 @@ SIGNIFICANCE_MARKERS = {
 # ============================================================================
 
 def setup_matplotlib():
-    """Configure matplotlib for PUBLICATION-QUALITY output."""
+    """Configure matplotlib for HIGH-QUALITY output."""
     plt.rcParams.update({
         'font.family': FONT_FAMILY,
         'font.size': 11,
@@ -106,7 +106,7 @@ def setup_matplotlib():
         'savefig.edgecolor': 'white',
         'savefig.bbox': 'tight',
         'savefig.dpi': DPI,
-        # Publication enhancements
+        # Professional enhancements
         'axes.linewidth': 1.2,
         'axes.grid': True,
         'grid.alpha': 0.3,
@@ -267,7 +267,7 @@ def add_scale_bar(ax, gdf_utm):
 
 
 def format_axis_for_map(ax, title, subtitle=None):
-    """Format axis for publication-quality map display."""
+    """Format axis for high-quality map display."""
     if subtitle:
         ax.set_title(f'{title}\n{subtitle}', fontsize=14, fontweight='bold', pad=15)
     else:
@@ -289,12 +289,12 @@ def add_statistical_annotation(ax, text, x=0.02, y=0.98, fontsize=10):
 
 
 # ============================================================================
-# FIGURE 1: MAP PARKING TURNOVER (CHOROPLETH) - PUBLICATION QUALITY
+# FIGURE 1: MAP PARKING TURNOVER (CHOROPLETH) - HIGH QUALITY
 # ============================================================================
 
 def plot_parking_turnover_map(zones_gdf, moran_df, output_path):
     """
-    Choropleth of Median Parking Duration - PUBLICATION-QUALITY Quality.
+    Choropleth of Median Parking Duration - HIGH-QUALITY Quality.
     
     Features:
     - Professional colormap with scientific interpretation
@@ -406,12 +406,12 @@ def plot_parking_turnover_map(zones_gdf, moran_df, output_path):
 
 
 # ============================================================================
-# FIGURE 2: MAP PARKING INTENSITY (CHOROPLETH) - PUBLICATION QUALITY
+# FIGURE 2: MAP PARKING INTENSITY (CHOROPLETH) - HIGH QUALITY
 # ============================================================================
 
 def plot_parking_intensity_map(zones_gdf, output_path):
     """
-    Choropleth of Parking Events Count - PUBLICATION-QUALITY Quality.
+    Choropleth of Parking Events Count - HIGH-QUALITY Quality.
     
     Features:
     - Log-scale visualization for better differentiation
@@ -505,17 +505,18 @@ def plot_parking_intensity_map(zones_gdf, output_path):
 
 
 # ============================================================================
-# FIGURE 3: MAP ABANDONED SCOOTERS ("GHOST" MAP) - PUBLICATION QUALITY
+# FIGURE 3: MAP ABANDONED SCOOTERS ("GHOST" MAP) 
 # ============================================================================
 
 def plot_abandoned_scooters_map(zones_gdf, ghost_df, output_path):
     """
-    Ghost vehicle locations with density heatmap - PUBLICATION-QUALITY Quality.
+    Ghost vehicle locations with zone-level aggregation for better visibility.
     
     Features:
-    - Point scatter with density coloring
-    - Background choropleth of abandonment rates
-    - Operator-specific statistics
+    - Choropleth showing ghost vehicle counts per zone
+    - Zone labels for zones with ghost vehicles
+    - Clear zone boundaries
+    - Summary statistics
     """
     print("\n" + "-"*50)
     print("Figure 3: Abandoned Scooters Map")
@@ -532,7 +533,7 @@ def plot_abandoned_scooters_map(zones_gdf, ghost_df, output_path):
     print(f"  → {len(ghost_df):,} abandoned scooter locations")
     
     # Project zones to Web Mercator
-    zones_plot = zones_gdf.to_crs(CRS_WEB_MERCATOR)
+    zones_plot = zones_gdf.to_crs(CRS_WEB_MERCATOR).copy()
     zones_utm = zones_gdf.to_crs(CRS_UTM32N)
     
     # Create GeoDataFrame for ghost locations
@@ -542,52 +543,72 @@ def plot_abandoned_scooters_map(zones_gdf, ghost_df, output_path):
         crs=CRS_WGS84
     ).to_crs(CRS_WEB_MERCATOR)
     
-    # Create figure
-    fig, ax = plt.subplots(figsize=FIGSIZE_MAP)
+    # Spatial join to count ghost vehicles per zone
+    zone_id_col = 'ZONASTAT' if 'ZONASTAT' in zones_plot.columns else 'zone_id'
+    ghost_with_zones = gpd.sjoin(ghost_gdf, zones_plot[['geometry', zone_id_col]], 
+                                  how='left', predicate='within')
+    ghost_counts = ghost_with_zones.groupby(zone_id_col).size().reset_index(name='ghost_count')
     
-    # Plot zones as background (abandoned_pct coloring)
-    if 'abandoned_pct' in zones_gdf.columns:
-        valid_zones = zones_plot[zones_plot['abandoned_pct'].notna()].copy()
-        if len(valid_zones) > 0:
-            valid_zones.plot(
-                column='abandoned_pct',
-                ax=ax,
-                cmap='Oranges',
-                alpha=0.6,
-                edgecolor='gray',
-                linewidth=0.3,
-                legend=True,
-                legend_kwds={
-                    'label': 'Zone Abandonment Rate (%)',
-                    'orientation': 'horizontal',
-                    'shrink': 0.5,
-                    'pad': 0.02,
-                    'aspect': 30
-                }
-            )
-    else:
-        zones_plot.plot(
+    # Merge counts back to zones
+    zones_plot = zones_plot.merge(ghost_counts, on=zone_id_col, how='left')
+    zones_plot['ghost_count'] = zones_plot['ghost_count'].fillna(0)
+    
+    # Create figure - slightly larger for better visibility
+    fig, ax = plt.subplots(figsize=(16, 14))
+    
+    # Plot ALL zones with light gray fill first (background)
+    zones_plot.plot(
+        ax=ax,
+        color='#f5f5f5',
+        edgecolor='#999999',
+        linewidth=0.8,
+        alpha=0.9
+    )
+    
+    # Plot zones WITH ghost vehicles using choropleth
+    zones_with_ghosts = zones_plot[zones_plot['ghost_count'] > 0].copy()
+    if len(zones_with_ghosts) > 0:
+        zones_with_ghosts.plot(
+            column='ghost_count',
             ax=ax,
-            color='lightgray',
-            alpha=0.4,
-            edgecolor='gray',
-            linewidth=0.3
+            cmap='OrRd',
+            alpha=0.85,
+            edgecolor='#333333',
+            linewidth=1.2,
+            legend=True,
+            legend_kwds={
+                'label': 'Ghost Vehicles per Zone',
+                'orientation': 'horizontal',
+                'shrink': 0.6,
+                'pad': 0.02,
+                'aspect': 30
+            }
         )
-    
-    # Plot ghost vehicle locations by operator
-    for operator, color in OPERATOR_COLORS.items():
-        op_ghosts = ghost_gdf[ghost_gdf['operator'] == operator]
-        if len(op_ghosts) > 0:
-            op_ghosts.plot(
-                ax=ax,
-                color=color,
-                markersize=15,
-                alpha=0.5,
-                marker='o',
-                edgecolor='white',
-                linewidth=0.3,
-                label=f'{operator} (n={len(op_ghosts):,})'
-            )
+        
+        # Add zone labels for zones with ghost vehicles
+        for _, row in zones_with_ghosts.iterrows():
+            centroid = row.geometry.centroid
+            count = int(row['ghost_count'])
+            zone_id = row[zone_id_col]
+            
+            # Only label zones with significant counts (top zones)
+            if count >= 5:  # Label zones with 5+ ghost vehicles
+                ax.annotate(
+                    f"Z{zone_id}\n({count})",
+                    xy=(centroid.x, centroid.y),
+                    fontsize=7,
+                    fontweight='bold',
+                    ha='center',
+                    va='center',
+                    color='black',
+                    bbox=dict(
+                        boxstyle='round,pad=0.2',
+                        facecolor='white',
+                        edgecolor='gray',
+                        alpha=0.85
+                    ),
+                    zorder=15
+                )
     
     # Add basemap
     add_basemap(ax)
@@ -598,12 +619,22 @@ def plot_abandoned_scooters_map(zones_gdf, ghost_df, output_path):
     
     # Format
     format_axis_for_map(ax, 
-        'Abandoned E-Scooters ("Ghost Vehicles")',
+        'Abandoned E-Scooters ("Ghost Vehicles") by Zone',
         'Turin Metropolitan Area • Idle Time > 5 Days')
     
-    # Ghost stats by operator
-    stats_text = f"Ghost Vehicle Analysis:\n"
+    # Calculate statistics
+    zones_affected = len(zones_with_ghosts) if len(zones_with_ghosts) > 0 else 0
+    total_zones = len(zones_plot)
+    top_zone = zones_with_ghosts.nlargest(1, 'ghost_count')
+    top_zone_id = top_zone[zone_id_col].values[0] if len(top_zone) > 0 else 'N/A'
+    top_zone_count = int(top_zone['ghost_count'].values[0]) if len(top_zone) > 0 else 0
+    
+    # Ghost stats - positioned in lower left
+    stats_text = f"Ghost Vehicle Summary:\n"
+    stats_text += f"━━━━━━━━━━━━━━━━━━━━━\n"
     stats_text += f"Total Events: {len(ghost_df):,}\n"
+    stats_text += f"Zones Affected: {zones_affected}/{total_zones}\n"
+    stats_text += f"Hotspot Zone: {top_zone_id} ({top_zone_count})\n"
     stats_text += f"Threshold: >120 hours\n\n"
     stats_text += f"By Operator:\n"
     for op in ['BIRD', 'LIME', 'VOI']:
@@ -611,10 +642,7 @@ def plot_abandoned_scooters_map(zones_gdf, ghost_df, output_path):
         pct = count / len(ghost_df) * 100 if len(ghost_df) > 0 else 0
         stats_text += f"  {op}: {count:,} ({pct:.1f}%)\n"
     
-    add_statistical_annotation(ax, stats_text, x=0.02, y=0.98)
-    
-    # Legend
-    ax.legend(loc='upper right', framealpha=0.95, edgecolor='gray')
+    add_statistical_annotation(ax, stats_text, x=0.7, y=0.2)
     
     # Save
     plt.tight_layout()
@@ -626,12 +654,12 @@ def plot_abandoned_scooters_map(zones_gdf, ghost_df, output_path):
 
 
 # ============================================================================
-# FIGURE 4: PARKING RHYTHM CURVE - PUBLICATION QUALITY
+# FIGURE 4: PARKING RHYTHM CURVE - HIGH QUALITY
 # ============================================================================
 
 def plot_parking_rhythm_curve(hourly_df, events_df, output_path):
     """
-    Daily rhythm of parking starts - PUBLICATION-QUALITY Quality.
+    Daily rhythm of parking starts - HIGH-QUALITY Quality.
     
     Features:
     - Operator-specific curves with shaded confidence
@@ -648,7 +676,7 @@ def plot_parking_rhythm_curve(hourly_df, events_df, output_path):
     
     print(f"  → {len(hourly_df)} hours of data")
     
-    # Create figure with larger size for publication
+    # Create figure with larger size for professional
     fig, ax = plt.subplots(figsize=FIGSIZE_WIDE)
     
     # Calculate operator-specific hourly counts
@@ -707,7 +735,7 @@ def plot_parking_rhythm_curve(hourly_df, events_df, output_path):
     ax.annotate(
         f'Trough: {trough_hour:02d}:00\n({trough_count:,.0f} events)',
         xy=(trough_hour, trough_count),
-        xytext=(trough_hour + 2, trough_count * 0.6),
+        xytext=(trough_hour - 1, trough_count * 2),
         fontsize=11,
         arrowprops=dict(arrowstyle='->', color='#C62828', lw=2),
         color='#C62828',
@@ -760,12 +788,12 @@ def plot_parking_rhythm_curve(hourly_df, events_df, output_path):
 
 
 # ============================================================================
-# FIGURE 5: PARKING DURATION HISTOGRAM - PUBLICATION QUALITY
+# FIGURE 5: PARKING DURATION HISTOGRAM - HIGH QUALITY
 # ============================================================================
 
 def plot_parking_duration_histogram(events_df, output_path):
     """
-    Log-scale histogram of parking durations - PUBLICATION-QUALITY Quality.
+    Log-scale histogram of parking durations - HIGH-QUALITY Quality.
     
     Features:
     - Stacked histogram by operator
@@ -896,12 +924,12 @@ def plot_parking_duration_histogram(events_df, output_path):
 
 
 # ============================================================================
-# FIGURE 6: TURNOVER VS DEMAND SCATTER - PUBLICATION QUALITY
+# FIGURE 6: TURNOVER VS DEMAND SCATTER - HIGH QUALITY
 # ============================================================================
 
 def plot_turnover_vs_demand_scatter(zones_gdf, output_path):
     """
-    Scatter plot: Total Trips vs Median Parking Duration - PUBLICATION-QUALITY Quality.
+    Scatter plot: Total Trips vs Median Parking Duration - HIGH-QUALITY Quality.
     
     Features:
     - Regression line with confidence interval
@@ -1064,7 +1092,7 @@ def plot_turnover_vs_demand_scatter(zones_gdf, output_path):
 
 def plot_survival_curves(survival_df, events_df, output_path):
     """
-    Kaplan-Meier survival curves by operator - PUBLICATION-QUALITY Quality.
+    Kaplan-Meier survival curves by operator - HIGH-QUALITY Quality.
     
     Shows probability of vehicle still being parked over time.
     Key metric: Time at which 50% of vehicles have been picked up.
@@ -1163,16 +1191,17 @@ def plot_survival_curves(survival_df, events_df, output_path):
     ax.grid(True, alpha=0.4, linestyle='--')
     ax.legend(loc='upper right', framealpha=0.95, edgecolor='gray')
     
-    # Statistical interpretation
-    stats_text = "Survival Analysis Interpretation:\n"
-    stats_text += "━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-    stats_text += "• Median survival time indicates\n"
-    stats_text += "  typical parking duration\n"
+    # Statistical interpretation - positioned BELOW legend (right side, middle-right)
+    stats_text = "Interpretation:\n"
+    stats_text += "• Median survival = typical parking\n"
     stats_text += "• Steeper curve = faster turnover\n"
     stats_text += "• Flatter tail = more 'ghost' vehicles"
     
-    add_statistical_annotation(ax, stats_text, x=0.02, y=0.35)
-    
+    # Position below the legend on the right side using left-aligned text
+    props = dict(boxstyle='round,pad=0.4', facecolor='#f5f5f5', edgecolor='gray', alpha=0.95)
+    ax.text(0.76, 0.75, stats_text, transform=ax.transAxes, fontsize=9,
+            verticalalignment='top', horizontalalignment='left', bbox=props)
+
     # Save
     plt.tight_layout()
     plt.savefig(output_path, dpi=DPI, bbox_inches='tight')
@@ -1188,7 +1217,7 @@ def plot_survival_curves(survival_df, events_df, output_path):
 
 def plot_operator_comparison(events_df, operator_stats, kruskal_wallis, output_path):
     """
-    Violin/box plot comparison across operators - PUBLICATION-QUALITY Quality.
+    Violin/box plot comparison across operators - HIGH-QUALITY Quality.
     
     Features:
     - Combined violin + box plot
@@ -1584,12 +1613,12 @@ def plot_od_parking_overlay_map(zones_gdf, od_matrix_path, output_path, top_n_fl
 # ============================================================================
 
 def main():
-    """Generate all Exercise 4 visualization figures (PUBLICATION-QUALITY Quality)."""
+    """Generate all Exercise 4 visualization figures (HIGH-QUALITY Quality)."""
     print("\n" + "="*70)
-    print("EXERCISE 4: PARKING DURATION ANALYSIS - PUBLICATION VISUALIZATION ENGINE")
+    print("EXERCISE 4: PARKING DURATION ANALYSIS - VISUALIZATION ENGINE")
     print("="*70)
-    print("Publication-Quality Fleet Management Visualizations")
-    print("8 Figures for publication-quality journal Submission")
+    print("Professional-Quality Fleet Management Visualizations")
+    print("8 Figures for high-quality report")
     print("="*70)
     
     # Setup
@@ -1667,10 +1696,10 @@ def main():
     )
     
     # ========================================================================
-    # C. ADVANCED ANALYSIS (NEW PUBLICATION FIGURES)
+    # C. ADVANCED ANALYSIS (NEW PROFESSIONAL FIGURES)
     # ========================================================================
     print("\n" + "="*70)
-    print("C. ADVANCED ANALYSIS (NEW PUBLICATION FIGURES)")
+    print("C. ADVANCED ANALYSIS (NEW PROFESSIONAL FIGURES)")
     print("="*70)
     
     # Figure 7: Kaplan-Meier Survival Curves
@@ -1708,7 +1737,7 @@ def main():
     # SUMMARY
     # ========================================================================
     print("\n" + "="*70)
-    print("PUBLICATION VISUALIZATION SUMMARY")
+    print("VISUALIZATION SUMMARY")
     print("="*70)
     
     successful = sum(1 for v in results.values() if v)
@@ -1734,9 +1763,9 @@ def main():
     print(f"\n→ Generated {successful}/{total} figures successfully")
     print(f"→ Output location: {FIGURE_DIR}")
     
-    # PUBLICATION-QUALITY Checklist
+    # HIGH-QUALITY Checklist
     print("\n" + "="*70)
-    print("PUBLICATION-QUALITY CHECKLIST:")
+    print("HIGH-QUALITY CHECKLIST:")
     print("="*70)
     print("""
 ✓ Professional cartographic elements (scale bars, north arrows)
