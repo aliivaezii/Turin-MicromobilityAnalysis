@@ -42,13 +42,8 @@ OUTPUT FILES:
     - Statistical test results
     - Checkpoint files for visualization
 
-REFERENCES:
-    - Moran, P.A.P. (1950). Notes on continuous stochastic phenomena
-    - Anselin, L. (1995). Local indicators of spatial association
-    - Getis, A. & Ord, J.K. (1992). The analysis of spatial association
-
 Author: Ali Vaezi
-Date: December 2024
+Date: December 2025
 ==============================================================================
 """
 
@@ -3032,4 +3027,3 @@ def main():
 # ==========================================
 if __name__ == '__main__':
     main()
-
