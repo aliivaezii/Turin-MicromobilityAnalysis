@@ -6,61 +6,31 @@ EXERCISE 3: PUBLIC TRANSPORT INTEGRATION ANALYSIS - Geospatial Mapping & Visuali
 
 Geospatial visualization and cartographic analysis module.
 
-This module generates publication-quality maps with professional cartographic
+This module generates high-quality maps with professional cartographic
 elements including scale bars, north arrows, and statistical overlays.
 
 Produces buffer sensitivity maps, integration metrics, and
 PT accessibility visualizations.
 
+FIGURES GENERATED (11 Total):
+    1. competition_map.png - Zones where scooters replace buses
+    2. integration_map.png - Zones where scooters feed buses  
+    3. buffer_sensitivity_curve.png - Integration % vs Buffer distance
+    4. temporal_comparison.png - Peak vs Off-Peak stability
+    5. inefficient_routes_map.png - High-tortuosity LIME routes
+    6. trip_density_hexbin.png - Trip density heatmap
+    7. operator_comparison_bar.png - Integration by operator
+    8. route_competition_bar.png - Top competing transit routes
+    9. tortuosity_histogram.png - Distribution of route efficiency
+    10. zone_scatter_integration.png - Integration vs Competition scatter
+    11. summary_dashboard.png - Multi-panel overview dashboard
+
 Output Directory: outputs/figures/exercise3/
 
-Author: Transport Research Team
+Author: Ali Vaezi
 Version: 1.0.0  
 Last Updated: December 2025
 ================================================================================
-"""
-"""
-=============================================================================
-04_visualization.py - Professional Visualization Suite for Exercise 3
-=============================================================================
-
-E-Scooter & Public Transport Integration Analysis - Visualization Module
-
-This script generates ALL professional figures from pre-computed checkpoints.
-Run this AFTER 04_transport_comparison.py has completed.
-
-FIGURES GENERATED (11 Total):
-─────────────────────────────────────────────────────────────────────────────
- #  │ Figure Name                      │ Description
-────┼──────────────────────────────────┼─────────────────────────────────────
- 1  │ competition_map.png              │ Zones where scooters replace buses
- 2  │ integration_map.png              │ Zones where scooters feed buses  
- 3  │ buffer_sensitivity_curve.png     │ Integration % vs Buffer distance
- 4  │ temporal_comparison.png          │ Peak vs Off-Peak stability
- 5  │ inefficient_routes_map.png       │ High-tortuosity LIME routes
- 6  │ trip_density_hexbin.png          │ Trip density heatmap
- 7  │ operator_comparison_bar.png      │ Integration by operator
- 8  │ route_competition_bar.png        │ Top competing transit routes
- 9  │ tortuosity_histogram.png         │ Distribution of route efficiency
-10  │ zone_scatter_integration.png     │ Integration vs Competition scatter
-11  │ summary_dashboard.png            │ Multi-panel overview dashboard
-─────────────────────────────────────────────────────────────────────────────
-
-INPUT CHECKPOINTS (from outputs/reports/exercise3/):
-- checkpoint_buffer_sensitivity.pkl
-- checkpoint_temporal.pkl  
-- checkpoint_zones_with_metrics.geojson
-- checkpoint_zone_overlaps.csv (if available)
-- checkpoint_trip_overlaps.pkl (if available)
-- checkpoint_routes_gdf.geojson
-- checkpoint_route_competition.pkl
-- checkpoint_validated_escooter_data.pkl
-- checkpoint_turin_pt_stops.csv
-- lime_tortuosity_analysis.csv
-
-Author: Data Science Pipeline
-Date: December 2025
-=============================================================================
 """
 
 import os
@@ -233,6 +203,164 @@ def prepare_geodataframes(checkpoints):
 
 
 # =============================================================================
+# FIGURE 0: STUDY AREA MAP (Statistical Zones Overview)
+# =============================================================================
+
+def plot_study_area_zones(checkpoints, output_dir):
+    """
+    Generate a professional map showing Turin's 94 statistical zones.
+    
+    This is for the Introduction/Study Area section of the report.
+    Zones are colored by trip activity (total trips) for clear visual distinction.
+    Enhanced VERSION: Clear choropleth coloring with trip density.
+    """
+    print("\n[0/11] Generating Study Area Zones Map...")
+    
+    zones_gdf = checkpoints.get('zones_with_metrics')
+    if zones_gdf is None:
+        zones_gdf = checkpoints.get('zones_base')
+    
+    if zones_gdf is None:
+        print("       ⚠️ Skipped: No zone data available")
+        return None
+    
+    # Create larger figure for better zone visibility
+    fig, ax = plt.subplots(1, 1, figsize=(14, 16))
+    
+    zones_gdf = zones_gdf.copy()
+    
+    # Ensure we're in Web Mercator for display
+    if zones_gdf.crs != 'EPSG:3857':
+        zones_gdf = zones_gdf.to_crs('EPSG:3857')
+    
+    # Get trip activity data for coloring
+    # Check for total_trips, total_activity, or compute from origins + destinations
+    if 'total_trips' in zones_gdf.columns:
+        color_col = 'total_trips'
+    elif 'total_activity' in zones_gdf.columns:
+        color_col = 'total_activity'
+    elif 'total_origins' in zones_gdf.columns and 'total_destinations' in zones_gdf.columns:
+        zones_gdf['total_activity'] = zones_gdf['total_origins'] + zones_gdf['total_destinations']
+        color_col = 'total_activity'
+    else:
+        # Fallback: use zone area for visual distinction
+        zones_gdf['zone_area'] = zones_gdf.geometry.area / 1e6  # km²
+        color_col = 'zone_area'
+        print("       ℹ️ Using zone area for coloring (no trip data)")
+    
+    # Use log scale for better visual distribution
+    import numpy as np
+    zones_gdf['color_value'] = np.log1p(zones_gdf[color_col])
+    
+    # Professional colormap - YlOrRd for trip intensity (yellow=low, red=high)
+    cmap = 'YlOrRd'
+    
+    # Plot zones with choropleth coloring
+    zones_gdf.plot(
+        column='color_value',
+        cmap=cmap,
+        ax=ax,
+        edgecolor='#333333',  # Dark gray borders
+        linewidth=1.2,
+        alpha=0.85,
+        legend=False  # We'll add a custom legend
+    )
+    
+    # Add zone ID labels in small circles
+    for idx, row in zones_gdf.iterrows():
+        centroid = row.geometry.centroid
+        zone_id = row.get('ZONASTAT', row.get('zona_stat', idx))
+        
+        # Calculate zone area for label sizing
+        zone_area = row.geometry.area / 1e6  # km²
+        fontsize = 6 if zone_area < 1.5 else 7
+        
+        ax.annotate(
+            str(zone_id),
+            xy=(centroid.x, centroid.y),
+            fontsize=fontsize,
+            ha='center',
+            va='center',
+            color='#1A1A1A',
+            fontweight='bold',
+            bbox=dict(
+                boxstyle='circle,pad=0.15',
+                facecolor='white',
+                edgecolor='#333333',
+                linewidth=0.8,
+                alpha=0.9
+            )
+        )
+    
+    # Add subtle basemap
+    try:
+        cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, alpha=0.25)
+    except Exception as e:
+        print(f"       ⚠️ Basemap failed: {e}")
+    
+    # Zoom to data with small buffer
+    bounds = zones_gdf.total_bounds
+    buffer_x = (bounds[2] - bounds[0]) * 0.02
+    buffer_y = (bounds[3] - bounds[1]) * 0.02
+    ax.set_xlim(bounds[0] - buffer_x, bounds[2] + buffer_x)
+    ax.set_ylim(bounds[1] - buffer_y, bounds[3] + buffer_y)
+    
+    # Professional title
+    n_zones = len(zones_gdf)
+    ax.set_title(f'Study Area: Municipality of Turin\n{n_zones} Statistical Zones with E-Scooter Activity', 
+                 fontsize=16, fontweight='bold', pad=15, color='#1A1A1A')
+    ax.set_axis_off()
+    
+    # Add north arrow
+    ax.annotate('N', xy=(0.97, 0.95), xycoords='axes fraction',
+                fontsize=14, fontweight='bold', ha='center', va='center',
+                color='#1A1A1A')
+    ax.annotate('↑', xy=(0.97, 0.92), xycoords='axes fraction',
+                fontsize=16, ha='center', va='center', color='#1A1A1A')
+    
+    # Add colorbar
+    sm = plt.cm.ScalarMappable(cmap=cmap, 
+                                norm=plt.Normalize(vmin=zones_gdf['color_value'].min(), 
+                                                   vmax=zones_gdf['color_value'].max()))
+    sm._A = []
+    cbar = plt.colorbar(sm, ax=ax, shrink=0.4, aspect=20, pad=0.02)
+    cbar.set_label('Trip Activity (log scale)', fontsize=11, fontweight='bold')
+    cbar.ax.tick_params(labelsize=9)
+    
+    # Add legend with zone info
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor='#FFFFB2', edgecolor='#333333', linewidth=1.2, 
+              label='Low activity zones'),
+        Patch(facecolor='#FD8D3C', edgecolor='#333333', linewidth=1.2, 
+              label='Medium activity zones'),
+        Patch(facecolor='#BD0026', edgecolor='#333333', linewidth=1.2, 
+              label='High activity zones'),
+    ]
+    leg = ax.legend(handles=legend_elements, loc='upper left', fontsize=10, 
+                    framealpha=0.95, edgecolor='#7F8C8D', fancybox=True,
+                    title=f'Zone Activity (n={n_zones})', title_fontsize=11)
+    
+    # Add data source note
+    ax.annotate(
+        'Data: City of Turin Zone Statistiche • E-Scooter Trip Data 2024-2025',
+        xy=(0.98, 0.02), xycoords='axes fraction',
+        fontsize=8, color='#666666', style='italic',
+        ha='right', va='bottom'
+    )
+    
+    plt.tight_layout()
+    
+    # Save
+    filepath = os.path.join(output_dir, 'study_area_zones.png')
+    plt.savefig(filepath, bbox_inches='tight', facecolor='white', dpi=300)
+    plt.close()
+    
+    print(f"       ✓ Saved: study_area_zones.png")
+    return filepath
+
+
+# =============================================================================
 # FIGURE 1: COMPETITION MAP (Zones where scooters replace buses)
 # =============================================================================
 
@@ -240,13 +368,16 @@ def plot_competition_map(checkpoints, output_dir):
     """
     Generate competition map showing zones where e-scooters compete with transit.
     
-    Uses checkpoint_zone_overlaps.csv joined to zones geometry.
-    Overlays GTFS routes to show transit corridors.
+    SIMPLIFIED VERSION:
+    - Clean choropleth showing competition intensity per zone
+    - NO transit route lines (too cluttered)
+    - NO zone name labels (unreadable)
+    - Just zone IDs for top 5 zones only
+    - Clear color legend
     """
-    print("\n[1/11] Generating Competition Map...")
+    print("\n[1/12] Generating Competition Map...")
     
     zones_gdf = checkpoints.get('zones_with_metrics')
-    routes_gdf = checkpoints.get('routes_gdf')
     zone_overlaps = checkpoints.get('zone_overlaps')
     
     if zones_gdf is None:
@@ -268,66 +399,109 @@ def plot_competition_map(checkpoints, output_dir):
         )
         zones_gdf['competitor_trip_count'] = zones_gdf['competitor_trip_count'].fillna(0)
         plot_col = 'competitor_trip_count'
-        title = 'E-Scooter Competition with Transit\n(Direct Competitor Trips per Zone)'
+        title = 'E-Scooter ↔ Transit Competition Hotspots'
     else:
         # Fallback to total_trips if competition data not available
         if 'total_trips' in zones_gdf.columns:
             plot_col = 'total_trips'
-            title = 'E-Scooter Trip Volume by Zone\n(Competition data unavailable)'
+            title = 'E-Scooter Trip Volume by Zone'
         else:
             print("       ⚠️ Skipped: No competition or trip data in zones")
             return None
     
     # Create figure
-    fig, ax = plt.subplots(1, 1, figsize=(12, 10))
+    fig, ax = plt.subplots(1, 1, figsize=(14, 12))
     
-    # Plot zones (choropleth)
+    # Plot ALL zones with light background first
     zones_gdf.plot(
-        column=plot_col,
-        cmap=COMPETITION_CMAP,
-        linewidth=0.3,
-        edgecolor='gray',
-        alpha=0.8,
         ax=ax,
-        legend=True,
-        legend_kwds={
-            'label': 'Competitor Trips',
-            'orientation': 'horizontal',
-            'shrink': 0.6,
-            'pad': 0.05
-        }
+        facecolor='#F5F5F5',
+        edgecolor='#CCCCCC',
+        linewidth=0.5,
+        alpha=1.0
     )
     
-    # Overlay transit routes if available
-    if routes_gdf is not None and len(routes_gdf) > 0:
-        routes_gdf.plot(
-            ax=ax,
-            color='#1E88E5',
+    # Plot zones with competition data as choropleth
+    zones_with_data = zones_gdf[zones_gdf[plot_col] > 0].copy()
+    if len(zones_with_data) > 0:
+        zones_with_data.plot(
+            column=plot_col,
+            cmap='YlOrRd',
             linewidth=0.8,
-            alpha=0.4,
-            label='Transit Routes'
+            edgecolor='#333333',
+            alpha=0.9,
+            ax=ax,
+            legend=True,
+            legend_kwds={
+                'label': 'Competitor Trips per Zone',
+                'orientation': 'horizontal',
+                'shrink': 0.6,
+                'pad': 0.02,
+                'aspect': 30
+            }
         )
     
-    # Add basemap
+    # Label ONLY top 5 zones with zone ID (not names!)
+    top_5_zones = zones_gdf.nlargest(5, plot_col)
+    for rank, (idx, row) in enumerate(top_5_zones.iterrows(), 1):
+        centroid = row.geometry.centroid
+        zone_id = row['ZONASTAT']
+        count = int(row[plot_col])
+        
+        ax.annotate(
+            f"#{rank}\nZ{zone_id}",
+            xy=(centroid.x, centroid.y),
+            fontsize=9,
+            ha='center',
+            va='center',
+            color='white',
+            fontweight='bold',
+            bbox=dict(boxstyle='round,pad=0.3', facecolor='#B71C1C', 
+                      edgecolor='white', linewidth=1.5, alpha=0.95)
+        )
+    
+    # Add basemap (subtle)
     try:
-        cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, alpha=0.5)
+        cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, alpha=0.3)
     except Exception as e:
         print(f"       ⚠️ Basemap failed: {e}")
     
+    # Zoom to data extent
+    bounds = zones_gdf.total_bounds
+    buffer_x = (bounds[2] - bounds[0]) * 0.03
+    buffer_y = (bounds[3] - bounds[1]) * 0.03
+    ax.set_xlim(bounds[0] - buffer_x, bounds[2] + buffer_x)
+    ax.set_ylim(bounds[1] - buffer_y, bounds[3] + buffer_y)
+    
     # Styling
-    ax.set_title(title, fontsize=14, fontweight='bold', pad=10)
+    ax.set_title(f'{title}\nZones with Direct PT Route Overlap', 
+                 fontsize=16, fontweight='bold', pad=15)
     ax.set_axis_off()
     
-    # Legend for routes
-    if routes_gdf is not None:
-        legend_elements = [
-            Line2D([0], [0], color='#1E88E5', linewidth=2, alpha=0.6, label='Transit Routes')
-        ]
-        ax.legend(handles=legend_elements, loc='lower right', fontsize=9)
+    # Simple legend - just color interpretation
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor='#FFEB3B', edgecolor='gray', label='Low Competition'),
+        Patch(facecolor='#FF9800', edgecolor='gray', label='Medium Competition'),
+        Patch(facecolor='#D32F2F', edgecolor='gray', label='High Competition'),
+        Patch(facecolor='#F5F5F5', edgecolor='#CCCCCC', label='No Competition Data'),
+    ]
+    ax.legend(handles=legend_elements, loc='upper left', fontsize=10, 
+              framealpha=0.95, edgecolor='gray')
+    
+    # Add summary stats
+    total_competitor = zones_gdf[plot_col].sum()
+    n_zones_with_data = (zones_gdf[plot_col] > 0).sum()
+    stats_text = f"Total Competitor Trips: {int(total_competitor):,}\n"
+    stats_text += f"Zones with PT Overlap: {n_zones_with_data}/{len(zones_gdf)}"
+    ax.annotate(stats_text, xy=(0.98, 0.98), xycoords='axes fraction',
+                fontsize=11, ha='right', va='top',
+                bbox=dict(boxstyle='round,pad=0.4', facecolor='white', 
+                          edgecolor='gray', alpha=0.95))
     
     # Save
     filepath = os.path.join(output_dir, 'competition_map.png')
-    plt.savefig(filepath, bbox_inches='tight', facecolor='white')
+    plt.savefig(filepath, bbox_inches='tight', facecolor='white', dpi=300)
     plt.close()
     
     print(f"       ✓ Saved: competition_map.png")
@@ -926,19 +1100,22 @@ def plot_tortuosity_histogram(checkpoints, output_dir):
     ax.axvline(x=1.2, color='orange', linestyle='--', linewidth=1.5, label='Moderate (1.2)')
     ax.axvline(x=1.5, color='red', linestyle='--', linewidth=1.5, label='Detoured (1.5)')
     
-    # Add statistics annotation
+    # Add statistics annotation - positioned in upper LEFT to avoid legend overlap
     stats_text = (f"Mean: {tortuosity.mean():.2f}\n"
                   f"Median: {tortuosity.median():.2f}\n"
                   f"Std: {tortuosity.std():.2f}")
-    ax.annotate(stats_text, xy=(0.95, 0.95), xycoords='axes fraction',
-                fontsize=10, ha='right', va='top',
-                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+    ax.annotate(stats_text, xy=(0.02, 0.95), xycoords='axes fraction',
+                fontsize=10, ha='left', va='top',
+                bbox=dict(boxstyle='round,pad=0.4', facecolor='white', edgecolor='gray', alpha=0.9))
     
     ax.set_xlabel('Tortuosity Index (Actual / Euclidean Distance)', fontsize=11)
     ax.set_ylabel('Number of Trips', fontsize=11)
     ax.set_title('LIME Route Efficiency Distribution\n(Tortuosity Index)', 
                  fontsize=13, fontweight='bold')
-    ax.legend(loc='upper right', fontsize=9)
+    
+    # Legend positioned in upper right, properly sized box
+    ax.legend(loc='upper right', fontsize=9, framealpha=0.95, 
+              edgecolor='gray', fancybox=True)
     ax.grid(True, axis='y', alpha=0.3)
     
     plt.tight_layout()
@@ -1215,8 +1392,9 @@ def main():
     print(" GENERATING FIGURES")
     print("="*80)
     
-    # Generate all 11 figures
+    # Generate all 12 figures (including study area)
     figure_functions = [
+        ('Study Area Zones', plot_study_area_zones),
         ('Competition Map', plot_competition_map),
         ('Integration Map', plot_integration_map),
         ('Buffer Sensitivity Curve', plot_sensitivity_curve),
