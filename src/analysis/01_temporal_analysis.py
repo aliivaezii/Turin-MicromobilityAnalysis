@@ -40,11 +40,6 @@ STATISTICAL TESTS:
     - Levene's test: Homogeneity of variances
     - Effect sizes: Cohen's d, eta-squared, Cramér's V
 
-REFERENCES:
-    - Cohen, J. (1988). Statistical Power Analysis for the Behavioral Sciences
-    - Cleveland, R. B. et al. (1990). STL: A Seasonal-Trend Decomposition
-    - Hollander, M. et al. (2013). Nonparametric Statistical Methods
-
 Author: Ali Vaezi
 Date: December 2025
 ==============================================================================
