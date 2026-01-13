@@ -207,7 +207,6 @@ for filename in bird_files_names:
 print("\n\n" + "="*100)
 print(" SUMMARY - Ready for Analysis")
 print("="*100)
-
 print("""
 Next step: Use these column names to update your cleaning code!
 
