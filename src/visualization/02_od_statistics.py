@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 """
 ================================================================================
-EXERCISE 2: ORIGIN-DESTINATION MATRIX ANALYSIS - Statistical Analysis & Visualization
+EXERCISE 2: ORIGIN-DESTINATION MATRIX ANALYSIS - Statistical Visualization
 ================================================================================
-This module generates high-impact figures and tables following
-rigorous academic standards for reproducible research.
-
 Creates spatial flow maps, zone-based choropleths, and
 OD matrix visualizations for mobility pattern analysis.
 
@@ -28,7 +25,7 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
-# Publication Style Configuration
+# Professional Style Configuration
 plt.rcParams.update({
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
