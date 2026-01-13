@@ -27,7 +27,7 @@ from scipy.signal import find_peaks
 
 warnings.filterwarnings('ignore')
 
-# Publication Style Configuration
+# Professional Style Configuration
 plt.rcParams.update({
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
