@@ -371,31 +371,6 @@ python run_pipeline.py --no-viz
 
 ---
 
-## Results
-
-### Sample Visualizations
-
-#### Temporal Patterns (Exercise 1)
-
-<p align="center">
-  <img src="outputs/figures/exercise1/lime_hourly_pattern.png" width="45%" alt="Hourly Pattern">
-  <img src="outputs/figures/exercise1/lime_weekly_pattern.png" width="45%" alt="Weekly Pattern">
-</p>
-
-#### Public Transport Integration (Exercise 3)
-
-<p align="center">
-  <img src="outputs/figures/exercise3/integration_map.png" width="70%" alt="Integration Map">
-</p>
-
-#### Economic Analysis (Exercise 5)
-
-<p align="center">
-  <img src="outputs/figures/exercise5/operator_pnl_waterfall.png" width="70%" alt="P&L Waterfall">
-</p>
-
----
-
 ## Cost Comparison for Commuters
 
 For a typical Home-to-University commute (Codegone to Valentino, 18 minutes):
