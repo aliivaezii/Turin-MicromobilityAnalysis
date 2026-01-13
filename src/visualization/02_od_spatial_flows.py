@@ -42,7 +42,8 @@ warnings.filterwarnings('ignore')
 # Paths - visualization scripts are in src/visualization/, need to go up 3 levels to project root
 BASE_DIR = Path(__file__).parent.parent.parent
 DATA_DIR = BASE_DIR / "outputs" / "reports" / "exercise2" / "combined"
-ZONES_PATH = BASE_DIR / "data" / "raw" / "zone_statistiche_geo" / "zone_statistiche_geo.shp"
+ZONES_PATH = BASE_DIR / "outputs" / "reports" / "exercise3" / "checkpoint_zones_with_metrics.geojson"
+ZONES_PATH_BACKUP = BASE_DIR / "outputs" / "reports" / "exercise4" / "checkpoint_parking_zones.geojson"
 FIGURE_DIR = BASE_DIR / "outputs" / "figures" / "exercise2" / "spatial"
 
 # CRS
@@ -50,7 +51,7 @@ CRS_WGS84 = "EPSG:4326"
 CRS_UTM32N = "EPSG:32632"
 CRS_WEB_MERCATOR = "EPSG:3857"
 
-# Publication-quality styling
+# High-quality styling
 FIGSIZE_STANDARD = (10, 8)  # Single-panel figures for LaTeX
 FIGSIZE_HEATMAP = (14, 12)
 FIGSIZE_MAP = (16, 14)
@@ -59,7 +60,7 @@ FIGSIZE_MULTI = (18, 14)
 DPI = 300
 FONT_FAMILY = 'DejaVu Sans'
 
-# Publication Color palettes
+# Professional Color palettes
 OPERATOR_COLORS = {
     'LIME': '#388E3C',   # Material Green 700
     'BIRD': '#1976D2',   # Material Blue 700
@@ -71,7 +72,7 @@ OPERATOR_COLORS = {
 # ============================================================================
 
 def setup_matplotlib():
-    """Configure matplotlib for PUBLICATION-QUALITY output."""
+    """Configure matplotlib for HIGH-QUALITY output."""
     plt.rcParams.update({
         'font.family': FONT_FAMILY,
         'font.size': 11,
@@ -147,12 +148,17 @@ def load_checkpoints():
         print(f"✗ Missing: {op_metrics_path.name}")
         checkpoints['operator_metrics'] = None
     
-    # 6. Zones shapefile
-    if ZONES_PATH.exists():
-        checkpoints['zones'] = gpd.read_file(ZONES_PATH)
-        print(f"✓ Loaded zones shapefile: {len(checkpoints['zones'])} zones")
-    else:
-        print(f"✗ Missing zones shapefile")
+    # 6. Zones GeoJSON (try primary, then backup)
+    zones_loaded = False
+    for zones_path in [ZONES_PATH, ZONES_PATH_BACKUP]:
+        if zones_path.exists():
+            checkpoints['zones'] = gpd.read_file(zones_path)
+            print(f"✓ Loaded zones: {len(checkpoints['zones'])} zones from {zones_path.name}")
+            zones_loaded = True
+            break
+    
+    if not zones_loaded:
+        print(f"✗ Missing zones file")
         checkpoints['zones'] = None
     
     # Summary
@@ -219,7 +225,7 @@ def add_scale_bar(ax, gdf_utm):
 
 def plot_clustered_heatmap(matrix, clusters_df, output_path):
     """
-    Heatmap with hierarchical clustering - PUBLICATION-QUALITY Quality.
+    Heatmap with hierarchical clustering - HIGH-QUALITY Quality.
     
     Reorders zones by cluster for clearer pattern visualization.
     """
@@ -484,14 +490,13 @@ def plot_asymmetry_heatmap(matrix, output_path):
     plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right', fontsize=9)
     plt.setp(ax.yaxis.get_majorticklabels(), rotation=0, fontsize=9)
     
-    # Add interpretation
-    stats_text = "Asymmetry Interpretation:\n"
-    stats_text += "Red: Net outflow (O → D)\n"
-    stats_text += "Blue: Net inflow (D → O)\n"
-    stats_text += "White: Balanced flows"
-    add_statistical_annotation(ax, stats_text, x=0.02, y=0.25)
+    # Add interpretation - BELOW the figure to avoid overlapping heatmap data
+    stats_text = "Asymmetry Interpretation:  Red: Net outflow (O → D)  |  Blue: Net inflow (D → O)  |  White: Balanced flows"
+    fig.text(0.4, 0.04, stats_text, ha='center', va='bottom', fontsize=10, 
+             style='italic', color='gray',
+             bbox=dict(boxstyle='round,pad=0.3', facecolor='#f8f8f8', edgecolor='gray', alpha=0.9))
     
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0.05, 1, 1])  # Leave space at bottom for note
     plt.savefig(output_path, dpi=DPI, bbox_inches='tight')
     plt.close()
     
@@ -505,7 +510,7 @@ def plot_asymmetry_heatmap(matrix, output_path):
 
 def plot_professional_flow_map(matrix, zones_gdf, output_path, top_n=30):
     """
-    Publication-quality flow map with curved arrows.
+    High-quality flow map with curved arrows.
     """
     print("\n" + "-"*50)
     print("Figure 4: Professional Flow Map")
@@ -619,6 +624,231 @@ def plot_professional_flow_map(matrix, zones_gdf, output_path, top_n=30):
     plt.close()
     
     print(f"  ✓ Saved: {output_path.name}")
+    return True
+
+
+# ============================================================================
+# FIGURE 4B: OPERATOR-SPECIFIC FLOW MAPS 
+# ============================================================================
+
+def plot_operator_flow_map(operator, zones_gdf, output_path, top_n=25):
+    """
+    High quality operator-specific flow map with enhanced zone visibility.
+    
+    Features:
+    - Colored zones based on trip activity (choropleth)
+    - Operator-specific color scheme
+    - Curved flow lines with gradient intensity
+    - Top corridor labels
+    """
+    print(f"\n  Generating enhanced flow map for {operator}...")
+    
+    if zones_gdf is None:
+        print(f"    ✗ Skipping {operator}: zones data not available")
+        return False
+    
+    # Load operator-specific O-D data from checkpoint
+    operator_data_path = BASE_DIR / "outputs" / "reports" / "exercise2" / "per_operator" / f"OD_Matrix_{operator}_AllDay.csv"
+    
+    if not operator_data_path.exists():
+        print(f"    ✗ Missing: {operator_data_path.name}")
+        return False
+    
+    matrix = pd.read_csv(operator_data_path, index_col=0)
+    
+    # Clean matrix
+    matrix_clean = matrix.drop('TOTAL', axis=0, errors='ignore')
+    matrix_clean = matrix_clean.drop('TOTAL', axis=1, errors='ignore')
+    
+    # Calculate zone activity (origins + destinations)
+    origin_totals = matrix_clean.sum(axis=1)
+    dest_totals = matrix_clean.sum(axis=0)
+    zone_activity = origin_totals.add(dest_totals, fill_value=0)
+    
+    # Get top corridors
+    flows = []
+    for origin in matrix_clean.index:
+        for dest in matrix_clean.columns:
+            if origin != dest:
+                trips = matrix_clean.loc[origin, dest]
+                if trips > 0:
+                    flows.append({'origin': str(origin), 'dest': str(dest), 'trips': trips})
+    
+    if len(flows) == 0:
+        print(f"    ✗ No flow data for {operator}")
+        return False
+    
+    flows_df = pd.DataFrame(flows).sort_values('trips', ascending=False).head(top_n)
+    
+    # Total trips for this operator
+    total_trips = matrix_clean.values.sum()
+    
+    print(f"    → {operator}: {total_trips:,.0f} total trips, showing top {len(flows_df)} corridors")
+    
+    # Project zones
+    zones_plot = zones_gdf.copy()
+    zones_plot['ZONASTAT'] = zones_plot['ZONASTAT'].astype(str)
+    zones_plot = zones_plot.to_crs(CRS_WEB_MERCATOR)
+    zones_utm = zones_gdf.to_crs(CRS_UTM32N)
+    
+    # Map zone activity to zones for choropleth
+    zone_activity_map = zone_activity.to_dict()
+    zones_plot['activity'] = zones_plot['ZONASTAT'].map(
+        lambda x: zone_activity_map.get(str(x), zone_activity_map.get(int(x) if x.isdigit() else x, 0))
+    )
+    
+    # Operator-specific color schemes
+    operator_colors = {
+        'LIME': {
+            'primary': '#388E3C',
+            'light': '#C8E6C9',
+            'medium': '#81C784',
+            'dark': '#1B5E20',
+            'cmap': LinearSegmentedColormap.from_list('lime', 
+                ['#E8F5E9', '#C8E6C9', '#A5D6A7', '#81C784', '#66BB6A', '#4CAF50', '#388E3C', '#2E7D32', '#1B5E20'], N=256)
+        },
+        'BIRD': {
+            'primary': '#1976D2',
+            'light': '#BBDEFB',
+            'medium': '#64B5F6',
+            'dark': '#0D47A1',
+            'cmap': LinearSegmentedColormap.from_list('bird', 
+                ['#E3F2FD', '#BBDEFB', '#90CAF9', '#64B5F6', '#42A5F5', '#2196F3', '#1976D2', '#1565C0', '#0D47A1'], N=256)
+        },
+        'VOI': {
+            'primary': '#D32F2F',
+            'light': '#FFCDD2',
+            'medium': '#E57373',
+            'dark': '#B71C1C',
+            'cmap': LinearSegmentedColormap.from_list('voi', 
+                ['#FFEBEE', '#FFCDD2', '#EF9A9A', '#E57373', '#EF5350', '#F44336', '#E53935', '#D32F2F', '#C62828'], N=256)
+        }
+    }
+    
+    colors = operator_colors.get(operator, operator_colors['LIME'])
+    
+    # Create figure
+    fig, ax = plt.subplots(figsize=(14, 12))
+    
+    # Plot zones with activity-based choropleth
+    # Zones with no activity get light gray
+    inactive_zones = zones_plot[zones_plot['activity'] == 0]
+    active_zones = zones_plot[zones_plot['activity'] > 0]
+    
+    # Plot inactive zones in light gray
+    if len(inactive_zones) > 0:
+        inactive_zones.plot(ax=ax, color='#F5F5F5', edgecolor='#BDBDBD', linewidth=0.5, alpha=0.8)
+    
+    # Plot active zones with choropleth coloring
+    if len(active_zones) > 0:
+        active_zones.plot(
+            ax=ax, 
+            column='activity',
+            cmap=colors['cmap'],
+            edgecolor='#424242',
+            linewidth=0.6,
+            alpha=0.85,
+            legend=True,
+            legend_kwds={
+                'label': f'{operator} Trip Activity',
+                'shrink': 0.6,
+                'aspect': 25,
+                'pad': 0.02
+            }
+        )
+    
+    # Draw flow lines
+    max_trips = flows_df['trips'].max()
+    min_trips = flows_df['trips'].min()
+    
+    for _, row in flows_df.iterrows():
+        try:
+            origin_geom = zones_plot[zones_plot['ZONASTAT'] == row['origin']]
+            dest_geom = zones_plot[zones_plot['ZONASTAT'] == row['dest']]
+            
+            if len(origin_geom) == 0 or len(dest_geom) == 0:
+                continue
+            
+            start = origin_geom.geometry.centroid.iloc[0]
+            end = dest_geom.geometry.centroid.iloc[0]
+            
+            # Normalize for styling
+            norm = (row['trips'] - min_trips) / (max_trips - min_trips) if max_trips > min_trips else 0.5
+            
+            # Line width and color intensity
+            lw = 1.5 + norm * 4
+            alpha = 0.5 + norm * 0.4
+            
+            # Draw curved line
+            mid_x = (start.x + end.x) / 2 + (end.y - start.y) * 0.08
+            mid_y = (start.y + end.y) / 2 - (end.x - start.x) * 0.08
+            
+            ax.plot([start.x, mid_x, end.x], [start.y, mid_y, end.y],
+                   color=colors['dark'], alpha=alpha, linewidth=lw, 
+                   solid_capstyle='round', zorder=5)
+            
+        except Exception as e:
+            continue
+    
+    # Add zone labels for top 8 most active zones
+    top_activity_zones = zone_activity.nlargest(8).index.tolist()
+    for zone in top_activity_zones:
+        zone_str = str(zone)
+        zone_row = zones_plot[zones_plot['ZONASTAT'] == zone_str]
+        if len(zone_row) > 0:
+            centroid = zone_row.geometry.centroid.iloc[0]
+            ax.annotate(
+                zone_str, 
+                xy=(centroid.x, centroid.y),
+                fontsize=9, 
+                fontweight='bold', 
+                ha='center', 
+                va='center',
+                color='white',
+                bbox=dict(
+                    boxstyle='circle,pad=0.2', 
+                    facecolor=colors['dark'], 
+                    edgecolor='white',
+                    linewidth=1.5,
+                    alpha=0.95
+                ), 
+                zorder=10
+            )
+    
+    # Add basemap
+    try:
+        cx.add_basemap(ax, crs=CRS_WEB_MERCATOR, source=cx.providers.CartoDB.Positron, alpha=0.4)
+    except:
+        pass
+    
+    # Cartographic elements
+    add_north_arrow(ax)
+    add_scale_bar(ax, zones_utm)
+    
+    # Title with operator info
+    ax.set_title(
+        f'{operator} E-Scooter Flow Patterns\nTop {top_n} Corridors | Total: {total_trips:,.0f} Trips', 
+        fontsize=15, fontweight='bold', pad=15, color=colors['dark']
+    )
+    ax.axis('off')
+    
+    # Add statistics annotation
+    top_corridor = flows_df.iloc[0]
+    stats_text = (
+        f"Top Corridor: Zone {top_corridor['origin']} → {top_corridor['dest']}\n"
+        f"Trips: {top_corridor['trips']:,.0f}\n"
+        f"Active Zones: {len(active_zones)}/94"
+    )
+    ax.text(0.02, 0.02, stats_text, transform=ax.transAxes, fontsize=10,
+            verticalalignment='bottom', fontfamily='monospace',
+            bbox=dict(boxstyle='round,pad=0.5', facecolor='white', 
+                     edgecolor=colors['primary'], alpha=0.95, linewidth=1.5))
+    
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=DPI, bbox_inches='tight')
+    plt.close()
+    
+    print(f"    ✓ Saved: {output_path.name}")
     return True
 
 
@@ -939,11 +1169,11 @@ def plot_operator_od_comparison(operator_metrics, output_path):
 # ============================================================================
 
 def main():
-    """Generate all Exercise 2 publication visualization figures."""
+    """Generate all Exercise 2 professional visualization figures."""
     print("\n" + "="*70)
-    print("EXERCISE 2: O-D MATRIX - PUBLICATION VISUALIZATION ENGINE")
+    print("EXERCISE 2: O-D MATRIX - VISUALIZATION ENGINE")
     print("="*70)
-    print("Publication-Quality Origin-Destination Visualizations")
+    print("Professional-Quality Origin-Destination Visualizations")
     print("="*70)
     
     # Setup
@@ -1010,6 +1240,22 @@ def main():
         top_n=30
     )
     
+    # Figure 4b: Operator-Specific Flow Maps (Enhanced)
+    print("\n" + "-"*50)
+    print("Figure 4b: Operator-Specific Flow Maps (Enhanced)")
+    print("-"*50)
+    
+    operator_flow_dir = BASE_DIR / "outputs" / "figures" / "exercise2" / "per_operator"
+    operator_flow_dir.mkdir(parents=True, exist_ok=True)
+    
+    for operator in ['LIME', 'BIRD', 'VOI']:
+        results[f'flow_map_{operator.lower()}'] = plot_operator_flow_map(
+            operator,
+            checkpoints['zones'],
+            operator_flow_dir / f'flow_map_{operator.lower()}_allday.png',
+            top_n=25
+        )
+    
     # ========================================================================
     # C. STATISTICAL ANALYSIS
     # ========================================================================
@@ -1033,7 +1279,7 @@ def main():
     # SUMMARY
     # ========================================================================
     print("\n" + "="*70)
-    print("PUBLICATION VISUALIZATION SUMMARY")
+    print("VISUALIZATION SUMMARY")
     print("="*70)
     
     successful = sum(1 for v in results.values() if v)
@@ -1054,9 +1300,9 @@ def main():
     print(f"\n→ Generated {successful}/{total} figures successfully")
     print(f"→ Output location: {FIGURE_DIR}")
     
-    # PUBLICATION-QUALITY Checklist
+    # HIGH-QUALITY Checklist
     print("\n" + "="*70)
-    print("PUBLICATION-QUALITY CHECKLIST:")
+    print("HIGH-QUALITY CHECKLIST:")
     print("="*70)
     print("""
 ✓ Hierarchical clustering for zone grouping
