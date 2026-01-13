@@ -328,52 +328,6 @@ python run_pipeline.py --no-viz
 
 ---
 
-## Results
-
-### Sample Visualizations
-
-#### Temporal Patterns (Exercise 1)
-
-<p align="center">
-  <img src="outputs/figures/exercise1/lime_hourly_pattern.png" width="45%" alt="Hourly Pattern">
-  <img src="outputs/figures/exercise1/lime_weekly_pattern.png" width="45%" alt="Weekly Pattern">
-</p>
-
-#### Public Transport Integration (Exercise 3)
-
-<p align="center">
-  <img src="outputs/figures/exercise3/integration_map.png" width="70%" alt="Integration Map">
-</p>
-
-#### Economic Analysis (Exercise 5)
-
-<p align="center">
-  <img src="outputs/figures/exercise5/operator_pnl_waterfall.png" width="70%" alt="P&L Waterfall">
-</p>
-
----
-
-## Cost Comparison for Commuters
-
-For a typical Home-to-University commute (Codegone to Valentino, 18 minutes):
-
-| Operator | Unlock Fee | Rate/min | Trip Cost | Monthly (44 trips) |
-|----------|------------|----------|-----------|-------------------|
-| **Lime** | €1.00 | €0.25 | €5.50 | €242.00 |
-| **Bird** | €1.00 | €0.19 | €4.42 | €194.48 |
-| **Voi** | €1.00 | €0.19 | €4.42 | €194.48 |
-
-### Subscription Recommendations
-
-| Scenario | Best Choice | Reason |
-|----------|-------------|--------|
-| **Occasional use** (< 10 trips/month) | Any operator | Similar pricing |
-| **Regular commute** (20+ trips/month) | Lime Pro subscription | Fixed monthly fee |
-| **Short trips** (< 5 min) | Bird or Voi | Lower per-minute rate |
-| **High availability priority** | Lime | Largest fleet |
-
----
-
 ## Technical Notes
 
 ### Data Quality
