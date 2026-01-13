@@ -31,7 +31,7 @@ from typing import Dict, List, Tuple
 from scipy import stats
 from scipy.signal import savgol_filter, find_peaks
 
-# Set publication style
+# Set professional style
 plt.style.use('seaborn-v0_8-whitegrid')
 plt.rcParams.update({
     'font.family': 'serif',
@@ -762,14 +762,14 @@ def plot_fleet_utilization(data: Dict, save_path: str):
 
 
 # ==============================================================================
-# FIGURE 8: INDIVIDUAL PUBLICATION FIGURES (formerly dashboard)
+# FIGURE 8: INDIVIDUAL PROFESSIONAL FIGURES (formerly dashboard)
 # ==============================================================================
 
-def plot_publication_dashboard(data: Dict, save_path: str):
+def plot_professional_dashboard(data: Dict, save_path: str):
     """
-    Create individual publication-quality figures for each analysis panel.
+    Create individual high-quality figures for each analysis panel.
     
-    Saves each figure separately with professional naming for academic papers.
+    Saves each figure separately with professional naming convention.
     Also saves a combined overview for reference.
     """
     base_path = os.path.dirname(save_path)
@@ -904,7 +904,7 @@ def plot_publication_dashboard(data: Dict, save_path: str):
     print(f"  ✓ Saved: fig_fleet_utilization_comparison.png")
     
     # =========================================================================
-    # Figure 6: Summary Statistics Table (as figure for papers)
+    # Figure 6: Summary Statistics Table
     # =========================================================================
     fig, ax = plt.subplots(figsize=(14, 4))
     ax.axis('off')
@@ -951,7 +951,7 @@ def plot_publication_dashboard(data: Dict, save_path: str):
     print(f"  ✓ Saved: fig_summary_statistics_table.png")
     
     # =========================================================================
-    # Also save combined overview (renamed from publication_dashboard)
+    # Also save combined overview (renamed from professional_dashboard)
     # =========================================================================
     fig = plt.figure(figsize=(16, 12))
     gs = fig.add_gridspec(3, 3, hspace=0.3, wspace=0.3)
@@ -1034,7 +1034,7 @@ def plot_publication_dashboard(data: Dict, save_path: str):
 
 def main():
     print("\n" + "="*70)
-    print("EXERCISE 1: PUBLICATION-QUALITY STATISTICS ENGINE")
+    print("EXERCISE 1: HIGH-QUALITY STATISTICS ENGINE")
     print("="*70)
     print(f"Output directory: {OUTPUTS_FIGURES}")
     
@@ -1052,7 +1052,7 @@ def main():
     
     # Generate figures
     print("\n" + "-"*70)
-    print("Generating PUBLICATION-QUALITY FIGURES...")
+    print("Generating HIGH-QUALITY FIGURES...")
     print("-"*70)
     
     figures = [
@@ -1063,7 +1063,7 @@ def main():
         ("statistical_dashboard.png", plot_statistical_dashboard),
         ("monthly_trend.png", plot_monthly_trend),
         ("fleet_utilization.png", plot_fleet_utilization),
-        ("operator_comparison_overview.png", plot_publication_dashboard),
+        ("operator_comparison_overview.png", plot_professional_dashboard),
     ]
     
     success_count = 0
@@ -1083,7 +1083,7 @@ def main():
     print(f"→ Output location: {OUTPUTS_FIGURES}")
     
     print("\n" + "="*70)
-    print("PUBLICATION-QUALITY CHECKLIST:")
+    print("HIGH-QUALITY CHECKLIST:")
     print("="*70)
     print("✓ Violin plots with distribution shapes")
     print("✓ Ridgeline plots for temporal comparison")
