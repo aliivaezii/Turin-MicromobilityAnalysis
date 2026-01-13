@@ -49,7 +49,7 @@ def load_quality_data():
 
 def plot_waterfall():
     """
-    Generate a publication-quality waterfall chart showing data cleaning stages.
+    Generate a high-quality waterfall chart showing data cleaning stages.
     """
     print("\n" + "="*70)
     print(" GENERATING DATA CLEANING WATERFALL CHART")
@@ -237,7 +237,7 @@ def plot_waterfall():
 
 def plot_bad_data_breakdown():
     """
-    Generate a publication-quality donut chart showing the breakdown of removed data.
+    Generate a high-quality donut chart showing the breakdown of removed data.
     Uses high-contrast colors to make categories distinct.
     """
     print("\n" + "-"*50)
