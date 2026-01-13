@@ -10,7 +10,7 @@ UPGRADED FEATURES:
 - Advanced O-D metrics (Gini, Entropy, Flow Asymmetry, Concentration)
 - Statistical tests (Chi-square for temporal independence)
 - Hierarchical clustering for zone grouping
-- Professional publication-quality checkpoints
+- Professional high-quality checkpoints
 
 This script performs:
 1. Loading cleaned mobility data and Turin Zone Statistiche shapefile
@@ -21,7 +21,7 @@ This script performs:
 6. Statistical testing for temporal patterns
 7. Checkpoint generation for visualization script
 
-Author: Data Science Pipeline 
+Author: Ali Vaezi
 Date: December 2025
 
 OUTPUT STRUCTURE:
@@ -725,16 +725,16 @@ if clusters is not None:
     print(f"   ✓ Saved: {cluster_path}")
 
 # ==========================================
-# 7. VISUALIZATION - HEATMAPS (IMPROVED)
+# 7. VISUALIZATION - HEATMAPS 
 # ==========================================
 
 print("\n" + "="*100)
 print(" STEP 6: VISUALIZATION - HEATMAPS")
 print("="*100)
 
-def plot_od_heatmap_improved(matrix, title, filename, save_path, top_n_zones=30, normalize=False):
+def plot_od_heatmap(matrix, title, filename, save_path, top_n_zones=30, normalize=False):
     """
-    Creates an IMPROVED heatmap visualization of the O-D matrix.
+    Creates an Enhanced heatmap visualization of the O-D matrix.
     
     Improvements:
     - Focus on top N zones by activity (clearer visualization)
@@ -787,7 +787,7 @@ def plot_od_heatmap_improved(matrix, title, filename, save_path, top_n_zones=30,
     # Create figure with better proportions
     fig, ax = plt.subplots(figsize=(14, 12))
     
-    # Create heatmap with improved settings
+    # Create heatmap with enhanced settings
     sns.heatmap(
         matrix_plot,
         cmap='RdYlBu_r',  # Better diverging colormap
@@ -838,7 +838,7 @@ def plot_od_heatmap_improved(matrix, title, filename, save_path, top_n_zones=30,
 
 def plot_full_od_heatmap(matrix, title, filename, save_path):
     """
-    Creates a FULL heatmap showing ALL zones with improved visibility.
+    Creates a FULL heatmap showing ALL zones with enhanced visibility.
     Uses clustering to group similar zones together.
     """
     # Remove the TOTAL row/column
@@ -880,10 +880,10 @@ def plot_full_od_heatmap(matrix, title, filename, save_path):
     plt.close()
 
 
-print("\n   Generating IMPROVED heatmaps...")
+print("\n   Generating Enhanced heatmaps...")
 
 # Top 30 zones heatmaps (cleaner, more readable)
-plot_od_heatmap_improved(
+plot_od_heatmap(
     matrix_all,
     'O-D Matrix - All Day',
     'od_heatmap_allday_top30.png',
@@ -891,7 +891,7 @@ plot_od_heatmap_improved(
     top_n_zones=30
 )
 
-plot_od_heatmap_improved(
+plot_od_heatmap(
     matrix_peak,
     'O-D Matrix - Peak Hours (7-9 AM, 5-7 PM)',
     'od_heatmap_peak_top30.png',
@@ -899,7 +899,7 @@ plot_od_heatmap_improved(
     top_n_zones=30
 )
 
-plot_od_heatmap_improved(
+plot_od_heatmap(
     matrix_offpeak,
     'O-D Matrix - Off-Peak Hours',
     'od_heatmap_offpeak_top30.png',
@@ -916,24 +916,23 @@ plot_full_od_heatmap(
 )
 
 # ==========================================
-# 8. VISUALIZATION - FLOW MAPS (IMPROVED)
+# 8. VISUALIZATION - FLOW MAPS 
 # ==========================================
 
 print("\n" + "="*100)
 print(" STEP 7: VISUALIZATION - FLOW MAPS")
 print("="*100)
 
-def plot_flow_map_improved(data, zones_gdf, zone_id_col, title, filename, save_path, 
+def plot_flow_map(data, zones_gdf, zone_id_col, title, filename, save_path, 
                            min_trips=100, top_n=None, color_by='volume'):
     """
-    Creates an IMPROVED geographic flow map showing O-D connections.
+    Creates an Enhanced geographic flow map showing O-D connections.
     
-    IMPROVEMENTS:
-    - Show ALL flows above a minimum threshold (not just top 50)
-    - Color gradient based on trip volume
-    - Curved lines to show direction (origin to destination)
-    - Zone labels for major hubs
-    - Better legend with actual trip ranges
+    Features:
+    - Zones colored by trip activity (YlOrRd gradient) - no more gray zones
+    - Curved Bezier lines showing flow direction
+    - Professional cartographic styling
+    - Clear zone boundary visibility
     
     Parameters:
     -----------
@@ -947,13 +946,21 @@ def plot_flow_map_improved(data, zones_gdf, zone_id_col, title, filename, save_p
     top_n : If set, only show top N flows (None = show all above min_trips)
     color_by : 'volume' for trip count coloring
     """
-    print(f"\n   Generating IMPROVED flow map: {title}")
+    print(f"\n   Generating Enhanced flow map: {title}")
+    
+    import numpy as np
+    from matplotlib.patches import FancyArrowPatch
+    from matplotlib.colors import LinearSegmentedColormap
+    import contextily as cx
     
     # Aggregate flows (count trips per O-D pair)
     flows = data.groupby(['start_zone', 'end_zone']).size().reset_index(name='trips')
     
     # Filter by minimum trips
     flows_filtered = flows[flows['trips'] >= min_trips].copy()
+    
+    # Remove intra-zonal flows
+    flows_filtered = flows_filtered[flows_filtered['start_zone'] != flows_filtered['end_zone']]
     
     # Optionally limit to top N
     if top_n is not None:
@@ -969,46 +976,49 @@ def plot_flow_map_improved(data, zones_gdf, zone_id_col, title, filename, save_p
     print(f"      Trip range: {flows_filtered['trips'].min():,} - {flows_filtered['trips'].max():,}")
     print(f"      Trips covered: {total_trips_shown:,} ({total_trips_shown/len(data)*100:.1f}% of total)")
     
-    # Calculate zone centroids
+    # Calculate zone activity for coloring
     zones_gdf = zones_gdf.copy()
+    zone_activity = data['start_zone'].value_counts().add(
+        data['end_zone'].value_counts(), fill_value=0
+    )
+    zones_gdf['total_activity'] = zones_gdf[zone_id_col].map(zone_activity).fillna(0)
+    zones_gdf['log_activity'] = np.log1p(zones_gdf['total_activity'])
+    
+    # Ensure zones are in Web Mercator for basemap
+    if zones_gdf.crs is None or zones_gdf.crs != 'EPSG:3857':
+        zones_gdf = zones_gdf.to_crs('EPSG:3857')
+    
     zones_gdf['centroid'] = zones_gdf.geometry.centroid
     
     # Create figure
     fig, ax = plt.subplots(figsize=(18, 16))
     
-    # Plot base map (zone polygons) with zone numbers
+    # Plot zones with activity-based choropleth coloring
     zones_gdf.plot(
+        column='log_activity',
+        cmap='YlOrRd',
         ax=ax,
-        color='#f0f0f0',
-        edgecolor='#cccccc',
-        linewidth=0.5,
-        alpha=0.9
+        edgecolor='#333333',
+        linewidth=0.8,
+        alpha=0.75,
+        legend=False
     )
     
-    # Color the most active zones
-    zone_activity = data['start_zone'].value_counts().add(
-        data['end_zone'].value_counts(), fill_value=0
-    )
-    top_active_zones = zone_activity.nlargest(15).index.tolist()
-    
-    zones_gdf[zones_gdf[zone_id_col].isin(top_active_zones)].plot(
-        ax=ax,
-        color='#ffe6cc',
-        edgecolor='#ff9933',
-        linewidth=1.5,
-        alpha=0.7
-    )
+    # Add basemap
+    try:
+        cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, alpha=0.3)
+    except Exception as e:
+        print(f"      ⚠️ Basemap failed: {e}")
     
     # Normalize for coloring and line width
     max_trips = flows_filtered['trips'].max()
     min_trips_val = flows_filtered['trips'].min()
     
-    # Create colormap
-    from matplotlib.colors import LinearSegmentedColormap
-    colors_list = ['#fee5d9', '#fcae91', '#fb6a4a', '#de2d26', '#a50f15']  # Light to dark red
-    cmap = LinearSegmentedColormap.from_list('trips', colors_list, N=256)
+    # Flow line colormap - blue gradient for lines (contrasts with red zones)
+    flow_colors = ['#9ecae1', '#6baed6', '#4292c6', '#2171b5', '#084594']
+    flow_cmap = LinearSegmentedColormap.from_list('flows', flow_colors, N=256)
     
-    # Draw flow lines
+    # Draw curved flow lines
     lines_drawn = 0
     for _, row in flows_filtered.iterrows():
         try:
@@ -1022,34 +1032,48 @@ def plot_flow_map_improved(data, zones_gdf, zone_id_col, title, filename, save_p
             start_centroid = start_zone_geom.geometry.centroid.iloc[0]
             end_centroid = end_zone_geom.geometry.centroid.iloc[0]
             
-            # Skip intra-zonal flows (same origin and destination)
-            if row['start_zone'] == row['end_zone']:
-                continue
-            
             # Normalize trip count for color and width
             if max_trips > min_trips_val:
                 norm_value = (row['trips'] - min_trips_val) / (max_trips - min_trips_val)
             else:
                 norm_value = 0.5
             
-            # Line width: 0.5 to 6 based on volume
-            line_width = 0.5 + norm_value * 5.5
+            # Line width: 1.0 to 8 based on volume
+            line_width = 1.0 + norm_value * 7.0
             
             # Color from colormap
-            line_color = cmap(norm_value)
+            line_color = flow_cmap(norm_value)
             
-            # Alpha: more transparent for lower volumes
-            alpha = 0.3 + norm_value * 0.6
+            # Alpha: more opaque for higher volumes
+            alpha = 0.4 + norm_value * 0.5
             
-            # Draw line
+            # Calculate curved path using quadratic Bezier
+            x0, y0 = start_centroid.x, start_centroid.y
+            x1, y1 = end_centroid.x, end_centroid.y
+            
+            # Control point perpendicular to the line
+            mid_x, mid_y = (x0 + x1) / 2, (y0 + y1) / 2
+            dx, dy = x1 - x0, y1 - y0
+            length = np.sqrt(dx**2 + dy**2)
+            
+            # Curve offset (10% of line length)
+            offset = length * 0.1
+            perp_x, perp_y = -dy / length * offset, dx / length * offset
+            
+            ctrl_x, ctrl_y = mid_x + perp_x, mid_y + perp_y
+            
+            # Create smooth curve
+            t = np.linspace(0, 1, 50)
+            curve_x = (1-t)**2 * x0 + 2*(1-t)*t * ctrl_x + t**2 * x1
+            curve_y = (1-t)**2 * y0 + 2*(1-t)*t * ctrl_y + t**2 * y1
+            
             ax.plot(
-                [start_centroid.x, end_centroid.x],
-                [start_centroid.y, end_centroid.y],
+                curve_x, curve_y,
                 color=line_color,
                 alpha=alpha,
                 linewidth=line_width,
                 solid_capstyle='round',
-                zorder=2 + norm_value  # Higher volume lines on top
+                zorder=2 + norm_value
             )
             lines_drawn += 1
             
@@ -1058,38 +1082,63 @@ def plot_flow_map_improved(data, zones_gdf, zone_id_col, title, filename, save_p
     
     print(f"      Lines drawn: {lines_drawn}")
     
+    # Get top active zones for labeling
+    top_active_zones = zone_activity.nlargest(10).index.tolist()
+    
     # Add zone labels for top active zones
-    for zone_id in top_active_zones[:10]:  # Label top 10
+    for zone_id in top_active_zones:
         zone_row = zones_gdf[zones_gdf[zone_id_col] == zone_id]
         if len(zone_row) > 0:
             centroid = zone_row.geometry.centroid.iloc[0]
             ax.annotate(
                 str(zone_id),
                 xy=(centroid.x, centroid.y),
-                fontsize=8,
+                fontsize=9,
                 fontweight='bold',
                 ha='center',
                 va='center',
-                color='black',
-                bbox=dict(boxstyle='circle,pad=0.2', facecolor='white', edgecolor='gray', alpha=0.8),
+                color='#1a1a1a',
+                bbox=dict(boxstyle='circle,pad=0.2', facecolor='white', 
+                         edgecolor='#333333', linewidth=1.0, alpha=0.9),
                 zorder=10
             )
     
     # Formatting
-    ax.set_title(f'{title}\n({lines_drawn} flows shown, min {min_trips} trips)', 
+    ax.set_title(f'{title}\n({lines_drawn} corridors, minimum {min_trips} trips)', 
                  fontsize=16, fontweight='bold', pad=20)
     ax.axis('off')
     
-    # Add colorbar legend
-    sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=min_trips_val, vmax=max_trips))
-    sm.set_array([])
-    cbar = plt.colorbar(sm, ax=ax, shrink=0.5, aspect=30, pad=0.02)
-    cbar.set_label('Trip Count', fontsize=12)
+    # Zoom to data
+    bounds = zones_gdf.total_bounds
+    buffer = 0.02
+    ax.set_xlim(bounds[0] - (bounds[2]-bounds[0])*buffer, 
+                bounds[2] + (bounds[2]-bounds[0])*buffer)
+    ax.set_ylim(bounds[1] - (bounds[3]-bounds[1])*buffer, 
+                bounds[3] + (bounds[3]-bounds[1])*buffer)
+    
+    # Add flow colorbar (for lines)
+    sm_flow = plt.cm.ScalarMappable(cmap=flow_cmap, 
+                                     norm=plt.Normalize(vmin=min_trips_val, vmax=max_trips))
+    sm_flow.set_array([])
+    cbar = plt.colorbar(sm_flow, ax=ax, shrink=0.4, aspect=25, pad=0.02)
+    cbar.set_label('Flow Volume (trips)', fontsize=11, fontweight='bold')
+    
+    # Add legend for zones
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor='#FFFFB2', edgecolor='#333333', label='Low activity'),
+        Patch(facecolor='#FD8D3C', edgecolor='#333333', label='Medium activity'),
+        Patch(facecolor='#BD0026', edgecolor='#333333', label='High activity'),
+    ]
+    ax.legend(handles=legend_elements, loc='lower left', fontsize=10, 
+              title='Zone Activity', title_fontsize=11,
+              framealpha=0.95, fancybox=True)
     
     # Add statistics box
     stats_text = f'Total Flows: {lines_drawn}\nTrips Shown: {total_trips_shown:,}\nCoverage: {total_trips_shown/len(data)*100:.1f}%'
-    ax.text(0.02, 0.02, stats_text, transform=ax.transAxes, fontsize=10,
-            verticalalignment='bottom', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+    ax.text(0.02, 0.15, stats_text, transform=ax.transAxes, fontsize=10,
+            verticalalignment='bottom', 
+            bbox=dict(boxstyle='round', facecolor='white', alpha=0.9, edgecolor='#666666'))
     
     plt.tight_layout()
     
@@ -1099,8 +1148,7 @@ def plot_flow_map_improved(data, zones_gdf, zone_id_col, title, filename, save_p
     print(f"      ✓ Saved: {filepath}")
     
     plt.close()
-
-
+    
 def plot_flow_map_all_flows(data, zones_gdf, zone_id_col, title, filename, save_path):
     """
     Creates a flow map showing ALL inter-zonal flows with aggregated visualization.
@@ -1195,7 +1243,7 @@ def plot_flow_map_all_flows(data, zones_gdf, zone_id_col, title, filename, save_
     plt.close()
 
 
-print("\n   Generating IMPROVED flow maps...")
+print("\n   Generating Enhanced flow maps...")
 
 # All flows map (showing all inter-zonal connections)
 plot_flow_map_all_flows(
@@ -1207,33 +1255,33 @@ plot_flow_map_all_flows(
     OUTPUTS_FIGURES
 )
 
-# Improved flow maps with min threshold (more readable than all flows)
-plot_flow_map_improved(
+# Flow maps with min threshold (readable version)
+plot_flow_map(
     df,
     zones_gdf,
     ZONE_ID_COL,
     'E-Scooter Flows - All Day',
-    'flow_map_allday_improved.png',
+    'flow_map_allday.png',
     OUTPUTS_FIGURES,
     min_trips=500  # Show flows with 500+ trips
 )
 
-plot_flow_map_improved(
+plot_flow_map(
     df_peak,
     zones_gdf,
     ZONE_ID_COL,
     'E-Scooter Flows - Peak Hours',
-    'flow_map_peak_improved.png',
+    'flow_map_peak.png',
     OUTPUTS_FIGURES,
     min_trips=200
 )
 
-plot_flow_map_improved(
+plot_flow_map(
     df_offpeak,
     zones_gdf,
     ZONE_ID_COL,
     'E-Scooter Flows - Off-Peak Hours',
-    'flow_map_offpeak_improved.png',
+    'flow_map_offpeak.png',
     OUTPUTS_FIGURES,
     min_trips=400
 )
@@ -1291,8 +1339,8 @@ for operator in ['LIME', 'BIRD', 'VOI']:
     print(f"      Flow Asymmetry: {op_metrics['flow_asymmetry']:.4f}")
     print(f"      Top-10 Concentration: {op_metrics['concentration_top10']:.4f}")
     
-    # --- Generate Improved Heatmap (with normalization to show relative patterns) ---
-    plot_od_heatmap_improved(
+    # --- Generate Enhanced Heatmap (with normalization to show relative patterns) ---
+    plot_od_heatmap(
         matrix_op,
         f'O-D Matrix Heatmap - {operator} (All Day)',
         f'od_heatmap_{operator.lower()}_allday.png',
@@ -1653,7 +1701,7 @@ with open(figure_descriptions_path, 'w') as f:
     f.write("- **Radial Pattern:** Flows radiate from center to peripheral zones (Lingotto, San Donato).\n")
     f.write("- **North-South Axis:** Strong connectivity along Via Roma and Corso Francia corridors.\n\n")
     
-    f.write("### Figure 2.2: `flow_map_allday_improved.png`\n")
+    f.write("### Figure 2.2: `flow_map_allday.png`\n")
     f.write("**Title:** E-Scooter Flows - All Day (500+ trips)\n\n")
     f.write("**Description:**\n")
     f.write(f"A filtered view showing only corridors with 500+ trips, highlighting the core network ")
