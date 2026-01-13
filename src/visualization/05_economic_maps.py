@@ -6,7 +6,7 @@ EXERCISE 5: ECONOMIC & SENSITIVITY ANALYSIS - Geospatial Mapping & Visualization
 
 Geospatial visualization and cartographic analysis module.
 
-This module generates publication-quality maps with professional cartographic
+This module generates high-quality maps with professional cartographic
 elements including scale bars, north arrows, and statistical overlays.
 
 Creates profit/loss visualizations, Monte Carlo distributions,
@@ -14,7 +14,7 @@ and scenario comparison charts.
 
 Output Directory: outputs/figures/exercise5/
 
-Author: Transport Research Team
+Author: Ali Vaezi
 Version: 1.0.0  
 Last Updated: December 2025
 ================================================================================
@@ -537,32 +537,44 @@ def plot_break_even_scatter(daily_vehicle, output_path):
     
     if break_even_trips:
         ax.axvline(x=break_even_trips, color='green', linestyle=':', linewidth=2, alpha=0.8)
-        ax.text(break_even_trips + 0.2, ax.get_ylim()[1] * 0.8,
-                f'Break-even:\n{break_even_trips} trips/day',
-                fontsize=11, fontweight='bold', color='green')
+        # Position break-even text in a cleaner location
+        ax.annotate(f'Break-even:\n{break_even_trips} trips/day',
+                    xy=(break_even_trips, 0), xycoords='data',
+                    xytext=(break_even_trips + 1.5, ax.get_ylim()[0] * 2),
+                    fontsize=10, fontweight='bold', color='green',
+                    bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='green', alpha=0.9),
+                    arrowprops=dict(arrowstyle='->', color='green', lw=1.5))
     
     # Formatting
-    ax.set_xlabel('Trips per Day per Vehicle', fontsize=12)
-    ax.set_ylabel('Daily Net Profit (€)', fontsize=12)
+    ax.set_xlabel('Trips per Day per Vehicle', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Daily Net Profit (€)', fontsize=12, fontweight='bold')
     ax.set_title('Vehicle Break-Even Analysis\nDaily Trips vs Profitability', 
                  fontsize=14, fontweight='bold')
     
     ax.set_xlim(0, 15)
-    ax.legend(loc='lower right', framealpha=0.9)
+    
+    # Legend moved to UPPER RIGHT with clear background
+    legend = ax.legend(loc='upper right', framealpha=1.0, edgecolor='black',
+                       facecolor='white', fontsize=9, title='Legend')
+    legend.get_frame().set_linewidth(1.2)
+    
     ax.grid(True, alpha=0.3)
     
-    # Fill profitable/loss regions
+    # Fill profitable/loss regions (subtle)
     xlim = ax.get_xlim()
     ylim = ax.get_ylim()
     ax.fill_between([xlim[0], xlim[1]], [0, 0], [ylim[1], ylim[1]], 
-                    color='green', alpha=0.05)
+                    color='green', alpha=0.03, zorder=0)
     ax.fill_between([xlim[0], xlim[1]], [ylim[0], ylim[0]], [0, 0], 
-                    color='red', alpha=0.05)
+                    color='red', alpha=0.03, zorder=0)
     
-    ax.text(xlim[1]*0.95, ylim[1]*0.1, 'PROFITABLE', 
-            ha='right', fontsize=10, color='green', alpha=0.5, fontweight='bold')
-    ax.text(xlim[1]*0.95, ylim[0]*0.1, 'LOSS-MAKING', 
-            ha='right', fontsize=10, color='red', alpha=0.5, fontweight='bold')
+    # Labels for regions - positioned more clearly
+    ax.text(xlim[1]*0.85, ylim[1]*0.15, 'PROFITABLE', 
+            ha='center', fontsize=11, color='green', alpha=0.6, fontweight='bold',
+            bbox=dict(boxstyle='round,pad=0.2', facecolor='white', edgecolor='none', alpha=0.7))
+    ax.text(xlim[1]*0.85, ylim[0]*0.3, 'LOSS-MAKING', 
+            ha='center', fontsize=11, color='red', alpha=0.6, fontweight='bold',
+            bbox=dict(boxstyle='round,pad=0.2', facecolor='white', edgecolor='none', alpha=0.7))
     
     # Save
     plt.tight_layout()
@@ -749,7 +761,7 @@ def plot_pareto_curve(pareto_df, output_path):
     ax1.set_title('Turin E-Scooter Operations - 80/20 Rule Applied to Zone Profitability',
                   fontsize=12, color='gray', pad=10)
     
-    # Legend
+    # Legend - positioned center right (middle of the chart)
     from matplotlib.patches import Patch
     legend_elements = [
         Patch(facecolor=PROFIT_GREEN, alpha=0.75, label='Profit Zone'),
@@ -757,13 +769,14 @@ def plot_pareto_curve(pareto_df, output_path):
         Line2D([0], [0], color='#1565C0', linewidth=3, label='Cumulative Profit %'),
         Line2D([0], [0], color='#FF6F00', linestyle='--', linewidth=2, label='80% Threshold')
     ]
-    ax1.legend(handles=legend_elements, loc='center right', framealpha=0.95, fontsize=10)
+    ax1.legend(handles=legend_elements, loc='center right', framealpha=0.95, fontsize=10,
+               bbox_to_anchor=(1.0, 0.3))  # Position lower on the right side
     
     # Grid
     ax1.grid(True, alpha=0.3, axis='y', zorder=0)
     ax1.set_axisbelow(True)
     
-    # Annotation box with key insights
+    # Annotation box with key insights - moved to LOWER LEFT to avoid overlapping with data
     total_profit = pareto_df['total_net_profit'].sum()
     profit_zones = (pareto_df['total_net_profit'] > 0).sum()
     loss_zones = (pareto_df['total_net_profit'] <= 0).sum()
@@ -772,8 +785,8 @@ def plot_pareto_curve(pareto_df, output_path):
                f"Profit Centers: {profit_zones} zones\n"
                f"Subsidy Zones: {loss_zones} zones")
     props = dict(boxstyle='round,pad=0.5', facecolor='#E3F2FD', alpha=0.95, edgecolor='#1565C0')
-    ax1.text(0.98, 0.95, textstr, transform=ax1.transAxes, fontsize=11,
-             verticalalignment='top', horizontalalignment='right', bbox=props)
+    ax1.text(0.02, 0.98, textstr, transform=ax1.transAxes, fontsize=11,
+             verticalalignment='top', horizontalalignment='left', bbox=props)
     
     # Save
     plt.tight_layout(rect=[0, 0, 1, 0.96])
